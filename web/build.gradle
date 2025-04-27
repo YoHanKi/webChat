@@ -1,0 +1,27 @@
+plugins {
+    id 'com.github.node-gradle.node' version '3.5.1'
+}
+
+node {
+    version = '18.16.0'
+    npmVersion = '9.5.0'
+    download = true
+    workDir = file("${project.buildDir}/nodejs")
+    nodeModulesDir = file("${project.projectDir}")
+}
+
+task npmInstall(type: com.github.gradle.node.npm.task.NpmInstallTask) {
+    args = ['install']
+}
+
+task npmDev(type: com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'dev']
+}
+
+task npmBuild(type: com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn npmInstall
+    args = ['run', 'build']
+}
+
+build.dependsOn npmBuild
