@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment :
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 16379
+      # SPRING_PROFILES_ACTIVE: dev
+      # docker-compose up -d -e SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Nuxt 쪽에서 process.env.API_URL 등을 통해 가져다 쓰면 됩니다
+      API_URL: "http://api:8080"
+    depends_on:
+      - api
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: redis
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:

@@ -10,18 +10,11 @@ node {
     nodeModulesDir = file("${project.projectDir}")
 }
 
-task npmInstall(type: com.github.gradle.node.npm.task.NpmInstallTask) {
-    args = ['install']
-}
-
-task npmDev(type: com.github.gradle.node.npm.task.NpmTask) {
-    dependsOn npmInstall
-    args = ['run', 'dev']
-}
-
-task npmBuild(type: com.github.gradle.node.npm.task.NpmTask) {
-    dependsOn npmInstall
+tasks.register('npmBuild', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn 'npmInstall'
     args = ['run', 'build']
 }
 
-build.dependsOn npmBuild
+tasks.register('build') {
+    dependsOn npmBuild
+}
