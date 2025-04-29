@@ -1,3 +1,10 @@
 spring:
   application:
     name: api
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST}
+      port: ${SPRING_REDIS_PORT}
+
+server:
+  port: 8080

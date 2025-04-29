@@ -8,8 +8,8 @@ services:
       - "8080:8080"
     environment :
       SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 16379
-      # SPRING_PROFILES_ACTIVE: dev
+      SPRING_REDIS_PORT: 6379
+      SPRING_PROFILES_ACTIVE: dev
       # docker-compose up -d -e SPRING_PROFILES_ACTIVE=dev
     depends_on:
       - redis

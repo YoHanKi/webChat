@@ -3,10 +3,8 @@ spring:
     name: api
   data:
     redis:
-      host: ${SPRING_REDIS_HOST:localhost}
-      port: ${SPRING_REDIS_PORT:6379}
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+      host: localhost
+      port: 16379
 
 server:
   port: 8080

@@ -23,57 +23,70 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import SockJS from 'sockjs-client'
-import { Client } from '@stomp/stompjs'
+import { ref, onMounted } from 'vue'
 
-const username = ref('')
-const messageContent = ref('')
-const messages = ref([])
-const connected = ref(false)
-const roomId = ref('public')
-let stompClient = null
+const username      = ref('')
+const messageContent= ref('')
+const messages      = ref([])
+const connected     = ref(false)
+const roomId        = ref('public')
+let stompClient     = null
 
-function connect() {
-  if (!username.value) {
-    alert('Please enter your name.')
-    return
-  }
+onMounted(async () => {
+  // now only in the browser
+  const SockJSModule = await import('sockjs-client')
+  const SockJS       = SockJSModule.default
+  const StompModule  = await import('@stomp/stompjs')
+  const Client       = StompModule.Client
+
   stompClient = new Client({
-    webSocketFactory: () => new SockJS('/ws-chat'),
+    webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'),
     reconnectDelay: 5000,
-    debug: (str) => console.log(str),
+    debug: msg => console.log(msg)
   })
+
   stompClient.onConnect = () => {
     connected.value = true
-    stompClient.subscribe(`/topic/${roomId.value}`, (payload) => {
-      const chat = JSON.parse(payload.body)
-      messages.value.push(chat)
+    stompClient.subscribe(`http://localhost:8080/topic/${roomId.value}`, frame => {
+      messages.value.push(JSON.parse(frame.body))
     })
     stompClient.publish({
       destination: '/app/chat.addUser',
       body: JSON.stringify({
         sender: username.value,
         type: 'JOIN',
-        roomId: roomId.value,
-      }),
+        roomId: roomId.value
+      })
     })
+  }
+})
+
+function connect() {
+  if (!username.value.trim()) {
+    return alert('Enter your name')
   }
   stompClient.activate()
 }
 
 function sendMessage() {
   if (!messageContent.value) return
-  const chatMessage = {
+  stompClient.publish({
+    destination: '/app/chat.sendMessage',
+    body: JSON.stringify({
+      sender: username.value,
+      content: messageContent.value,
+      type: 'CHAT',
+      roomId: roomId.value
+    })
+  })
+
+  messages.value.push({
     sender: username.value,
     content: messageContent.value,
     type: 'CHAT',
-    roomId: roomId.value,
-  }
-  stompClient.publish({
-    destination: '/app/chat.sendMessage',
-    body: JSON.stringify(chatMessage),
+    roomId: roomId.value
   })
+
   messageContent.value = ''
 }
 </script>
