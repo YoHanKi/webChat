@@ -3,12 +3,13 @@ package com.api.domain.user.controller;
 import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.model.RegisterRequest;
 import com.api.domain.user.service.UserService;
-import com.api.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
@@ -17,16 +18,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
     private final UserService authService;
-
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal CustomUserDetails principal) {
-        // 200 OK: 현재 사용자 정보 반환
-        if (principal == null) {
-            // 401 Unauthorized: 인증되지 않은 사용자
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(principal);
-    }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {

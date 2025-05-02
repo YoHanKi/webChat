@@ -2,9 +2,15 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+
+onMounted(() => {
+  // 페이지가 로드될 때 사용자 정보를 확인합니다.
+  auth.init();
+})
 
 function onLogout() {
   auth.logout()

@@ -3,9 +3,14 @@ import { defineStore } from 'pinia'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
-        user: typeof window !== 'undefined' ? sessionStorage.getItem('username') : null
+        user: typeof window !== 'undefined' ? sessionStorage.getItem('username') : null as string | null
     }),
     actions: {
+        init() {
+            if (typeof window !== 'undefined') {
+                this.user = sessionStorage.getItem('username')
+            }
+        },
         async login(username: string, password: string) {
             const res = await fetch('/api/login', {
                 method: 'POST',
