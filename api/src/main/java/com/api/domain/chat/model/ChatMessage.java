@@ -1,4 +1,4 @@
-package com.api.model;
+package com.api.domain.chat.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,7 +1,7 @@
 package com.api.websocket.handler;
 
-import com.api.Service.RedisPublisher;
-import com.api.model.ChatMessage;
+import com.api.domain.chat.Service.RedisPublisher;
+import com.api.domain.chat.model.ChatMessage;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

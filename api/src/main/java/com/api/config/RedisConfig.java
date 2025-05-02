@@ -1,7 +1,7 @@
 package com.api.config;
 
-import com.api.Service.RedisSubscriber;
-import com.api.model.ChatMessage;
+import com.api.domain.chat.Service.RedisSubscriber;
+import com.api.domain.chat.model.ChatMessage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

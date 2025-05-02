@@ -6,5 +6,23 @@ spring:
       host: ${SPRING_REDIS_HOST}
       port: ${SPRING_REDIS_PORT}
 
+  datasource:
+    url: jdbc:mysql://localhost:3306/webChat?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: user
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 10000
+      minimum-idle: 3
+      maximum-pool-size: 6
+      idle-timeout: 10000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    #    show-sql: false
+    properties:
+      hibernate:
+        #        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
 server:
   port: 8080

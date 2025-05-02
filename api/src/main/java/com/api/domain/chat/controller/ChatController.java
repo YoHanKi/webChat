@@ -1,15 +1,12 @@
-package com.api.controller;
+package com.api.domain.chat.controller;
 
-import com.api.Service.RedisPublisher;
-import com.api.Service.RedisSubscriber;
-import com.api.model.ChatMessage;
+import com.api.domain.chat.Service.RedisPublisher;
+import com.api.domain.chat.Service.RedisSubscriber;
+import com.api.domain.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
-
-import java.util.Objects;
 
 @Controller
 @RequiredArgsConstructor
