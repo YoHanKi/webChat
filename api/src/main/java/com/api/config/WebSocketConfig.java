@@ -1,8 +1,7 @@
 package com.api.config;
 
-import com.api.websocket.handler.ChatWebSocketHandler;
+import com.api.domain.chat.websocket.handler.ChatWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 

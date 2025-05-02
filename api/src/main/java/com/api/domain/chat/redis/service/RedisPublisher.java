@@ -1,4 +1,4 @@
-package com.api.domain.chat.Service;
+package com.api.domain.chat.redis.service;
 
 import com.api.domain.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.api.domain.user.service;
 
-import com.api.domain.user.UsernameAlreadyExistsException;
+import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.entity.UserEntity;
 import com.api.domain.user.model.RegisterRequest;
 import com.api.domain.user.repository.UserRepository;

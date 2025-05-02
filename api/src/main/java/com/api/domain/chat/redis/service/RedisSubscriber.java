@@ -1,7 +1,7 @@
-package com.api.domain.chat.Service;
+package com.api.domain.chat.redis.service;
 
 import com.api.domain.chat.model.ChatMessage;
-import com.api.websocket.handler.ChatWebSocketHandler;
+import com.api.domain.chat.websocket.handler.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;

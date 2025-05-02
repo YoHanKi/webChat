@@ -1,6 +1,6 @@
 package com.api.domain.user.controller;
 
-import com.api.domain.user.UsernameAlreadyExistsException;
+import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.model.RegisterRequest;
 import com.api.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
