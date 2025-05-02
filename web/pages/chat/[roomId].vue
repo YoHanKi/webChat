@@ -66,15 +66,13 @@ const container = ref(null);
 
 onMounted(async () => {
   try {
-    //    이 요청은 브라우저 쿠키(JSESSIONID)를 자동으로 포함합니다.
-    const userInfo = await $fetch('/api/user/me', { credentials: 'include' }); // 실제 API 경로로 변경하세요.
-
-    if (!userInfo || !userInfo.username) {
-      console.error('사용자 정보를 가져올 수 없습니다. 로그인 상태를 확인하세요.');
+    // 세션에서 가져옴
+    const name = sessionStorage.getItem('username');
+    if (!name) {
       router.push('/login');
       return;
     }
-    username.value = userInfo.username; // API로부터 받은 사용자 이름 사용
+    username.value = name;
 
     room.value.name = `채팅방 ${roomId}`; // 임시 이름
 
@@ -84,7 +82,7 @@ onMounted(async () => {
 
     socket.onopen = () => {
       // 3. JOIN 메시지에 서버에서 확인된 사용자 이름 사용
-      socket.send(JSON.stringify({ type: 'JOIN', sender: username.value, content: '', roomId }));
+      socket.send(JSON.stringify({ type: 'JOIN', sender: name, content: '', roomId }));
     };
 
     socket.onmessage = (event) => {
