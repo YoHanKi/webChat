@@ -51,6 +51,8 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+// Nuxt 3의 내장 fetch 사용
+import { $fetch } from 'ofetch';
 
 const route = useRoute();
 const router = useRouter();
@@ -62,31 +64,64 @@ const room = ref({ id: roomId, name: '로딩 중...' });
 let socket;
 const container = ref(null);
 
-onMounted(() => {
-  const name = sessionStorage.getItem('username');
-  if (!name) {
-    router.push('/login');
-    return;
-  }
-  username.value = name;
-  // 방 정보를 API로 가져오는 경우 여기에 호출
-  room.value.name = `채팅방 ${roomId}`;
+onMounted(async () => {
+  try {
+    //    이 요청은 브라우저 쿠키(JSESSIONID)를 자동으로 포함합니다.
+    const userInfo = await $fetch('/api/user/me', { credentials: 'include' }); // 실제 API 경로로 변경하세요.
 
-  socket = new WebSocket(`ws://localhost:8080/ws-chat?roomId=${roomId}`);
-  socket.onopen = () => {
-    socket.send(JSON.stringify({ type: 'JOIN', sender: name, content: '', roomId }));
-  };
-  socket.onmessage = (event) => {
-    const chat = JSON.parse(event.data);
-    if (chat.roomId === roomId) {
-      messages.value.push(chat);
-      nextTick(() => {
-        if (container.value) {
-          container.value.scrollTop = container.value.scrollHeight;
-        }
-      });
+    if (!userInfo || !userInfo.username) {
+      console.error('사용자 정보를 가져올 수 없습니다. 로그인 상태를 확인하세요.');
+      router.push('/login');
+      return;
     }
-  };
+    username.value = userInfo.username; // API로부터 받은 사용자 이름 사용
+
+    room.value.name = `채팅방 ${roomId}`; // 임시 이름
+
+    // 2. 웹소켓 연결 (이제 username.value는 서버에서 확인된 값)
+    socket = new WebSocket(`ws://localhost:8080/ws-chat?roomId=${roomId}`);
+
+
+    socket.onopen = () => {
+      // 3. JOIN 메시지에 서버에서 확인된 사용자 이름 사용
+      socket.send(JSON.stringify({ type: 'JOIN', sender: username.value, content: '', roomId }));
+    };
+
+    socket.onmessage = (event) => {
+      const chat = JSON.parse(event.data);
+      if (chat.roomId === roomId) {
+        messages.value.push(chat);
+        nextTick(() => {
+          if (container.value) {
+            container.value.scrollTop = container.value.scrollHeight;
+          }
+        });
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket 오류:', error);
+      // 오류 처리 로직 (예: 사용자에게 알림)
+      router.push('/');
+    };
+
+    socket.onclose = (event) => {
+      console.log('WebSocket 연결 종료:', event);
+      // 연결 종료 처리 로직
+      router.push('/login');
+    };
+
+  } catch (error) {
+    console.error('인증 또는 초기화 오류:', error);
+    // $fetch 실패 시 (예: 401 Unauthorized) 로그인 페이지로 리디렉션
+    if (error.response && error.response.status === 401) {
+      router.push('/login');
+    } else {
+      // 다른 종류의 오류 처리 (예: 네트워크 오류)
+      alert('채팅방 정보를 불러오는 중 오류가 발생했습니다.');
+      router.push('/');
+    }
+  }
 });
 
 function sendMessage() {

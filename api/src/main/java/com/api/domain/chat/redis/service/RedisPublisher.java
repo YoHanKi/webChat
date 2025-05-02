@@ -1,6 +1,6 @@
-package com.api.Service;
+package com.api.domain.chat.redis.service;
 
-import com.api.model.ChatMessage;
+import com.api.domain.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;

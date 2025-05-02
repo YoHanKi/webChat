@@ -3,7 +3,6 @@
     <!-- Header -->
     <header class="bg-[#03C75A] text-white p-4 flex flex-col items-center justify-center shadow-md">
       <h1 class="text-2xl font-bold">WebChat Rooms</h1>
-      <NuxtLink to="/login" class="underline hover:text-gray-200">로그인/프로필</NuxtLink>
     </header>
 
     <!-- Room list -->
@@ -28,6 +27,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+// const { data: rooms } = await useFetch('/api/rooms');
 
 // 실제 환경에서는 API 호출로 방 목록을 받아옵니다
 const rooms = ref([]);
