@@ -7,7 +7,6 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Service
@@ -26,11 +25,7 @@ public class RedisSubscriber implements MessageListener {
         ChatMessage chat = ChatMessage.fromJson(json);
 
         // ChatWebSocketHandler에 브로드캐스트를 위임
-        try {
-            webSocketHandler.broadcast(chat);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        webSocketHandler.broadcast(chat);
     }
 
 
