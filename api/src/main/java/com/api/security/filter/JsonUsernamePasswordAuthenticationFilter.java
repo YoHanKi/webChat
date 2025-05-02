@@ -1,44 +1,64 @@
 package com.api.security.filter;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.*;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import java.io.IOException;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Map;
 
-public class JsonUsernamePasswordAuthenticationFilter
-        extends UsernamePasswordAuthenticationFilter {
+public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public JsonUsernamePasswordAuthenticationFilter(AuthenticationManager authManager) {
-        super.setAuthenticationManager(authManager);
+        super(authManager);
+        // /login 또는 /login/admin 요청을 매칭
+        this.setRequiresAuthenticationRequestMatcher(
+                new OrRequestMatcher(
+                        new AntPathRequestMatcher("/api/login")
+                )
+        );
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request,
-                                                HttpServletResponse response)
-            throws AuthenticationException {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
-        if (!request.getContentType().startsWith("application/json")) {
+        if (!request.getMethod().equals("POST")) {
             return super.attemptAuthentication(request, response);
         }
 
-        try {
-            Map<String, String> creds = objectMapper
-                    .readValue(request.getInputStream(), Map.class);
-            String username = creds.get("username");
-            String password = creds.get("password");
+        Map<String, String> requestJSON = parseRequestJSON(request);
+        String username = requestJSON.get(USERNAME);
+        username = username != null ? username.trim() : "";
+        String password = requestJSON.get(PASSWORD);
+        password = password != null ? password : "";
 
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(username, password);
-            setDetails(request, authToken);
-            return this.getAuthenticationManager().authenticate(authToken);
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password);
 
-        } catch (IOException e) {
-            throw new AuthenticationServiceException("Invalid JSON", e);
+        this.setDetails(request, authToken);
+
+        return this.getAuthenticationManager().authenticate(authToken);
+
+    }
+
+    private Map<String, String> parseRequestJSON(HttpServletRequest request) {
+        try (Reader reader = new InputStreamReader(request.getInputStream())) {
+            return objectMapper.readValue(reader, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new AuthenticationServiceException("Failed to parse request JSON", e);
         }
     }
 }

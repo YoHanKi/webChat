@@ -1,6 +1,8 @@
 package com.api.config;
 
 import com.api.security.filter.JsonUsernamePasswordAuthenticationFilter;
+import com.api.security.handler.JsonAuthenticationFailureHandler;
+import com.api.security.handler.JsonAuthenticationSuccessHandler;
 import com.api.security.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -15,9 +17,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -25,6 +30,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;
+    private final JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
 
     // 1) PasswordEncoder 빈
     @Bean
@@ -54,16 +61,22 @@ public class SecurityConfig {
         // JSON 바디 로그인 처리 필터
         var jsonFilter = new JsonUsernamePasswordAuthenticationFilter(authManager);
         jsonFilter.setFilterProcessesUrl("/api/login");
-        jsonFilter.setAuthenticationSuccessHandler(new SimpleUrlAuthenticationSuccessHandler());
-        jsonFilter.setAuthenticationFailureHandler(new SimpleUrlAuthenticationFailureHandler());
+        jsonFilter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler);
+        jsonFilter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler);
 
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable).cors(cors -> cors
+                        .configurationSource(corsConfigurationSource())
+                )
                 .sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(3)
+                        .maxSessionsPreventsLogin(true)
+                        .expiredUrl("/login?expired=true")
                 )
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/user/register").permitAll()
+                        .requestMatchers("/api/login", "/api/user/register", "/api/user/me").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 직접 등록한 DaoAuthenticationProvider 사용
@@ -72,5 +85,24 @@ public class SecurityConfig {
                 .addFilterAt(jsonFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // 5) CORS 설정
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        // 1) 허용할 오리진
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        // 2) 허용할 HTTP 메서드
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        // 3) 허용할 요청 헤더
+        config.setAllowedHeaders(List.of("*"));
+        // 4) 자격증명(쿠키) 허용
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // 모든 경로에 대해 위 설정 적용
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

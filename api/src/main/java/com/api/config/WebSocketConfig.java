@@ -20,6 +20,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry
                 .addHandler(chatHandler, "/ws-chat")      // 클라이언트가 접속할 엔드포인트
                 .addInterceptors(new HttpSessionHandshakeInterceptor())
-                .setAllowedOriginPatterns("*");           // CORS 허용
+                .setAllowedOriginPatterns("http://localhost:3000");           // CORS 허용
     }
 }
