@@ -1,8 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineNuxtConfig({
   ssr: true,
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  css: ['~/assets/css/main.css'],
 
   modules: [
     '@nuxt/eslint',
@@ -29,6 +32,10 @@ export default defineNuxtConfig({
     // 클라이언트 전용 모듈 처리
     ssr: {
       noExternal: ['sockjs-client', '@stomp/stompjs']
-    }
+    },
+
+    plugins: [
+      tailwindcss(),
+    ],
   }
 })

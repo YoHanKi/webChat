@@ -13,19 +13,17 @@ public class RedisPublisher {
     private final RedisTemplate<String, ChatMessage> redisTemplate;
     private final ChannelTopic topic;
 
+    /**
+     * 채팅 메시지를 Redis Pub/Sub 토픽에 발행하고, 룸별 히스토리를 Redis List에 저장합니다.
+     */
     public void publish(ChatMessage message) {
-        // 1) Pub/Sub으로 브로드캐스트
-        redisTemplate.convertAndSend(topic.getTopic(), message);
+        // 1) 메시지를 JSON 문자열로 변환해 토픽으로 발행
+        redisTemplate.convertAndSend(topic.getTopic(), message.toJson());
 
-        // 2) 채팅 기록을 List에 저장 (최대 100건 유지)
-        String key = historyKey(message.getRoomId());
+        // 2) 룸별 채팅 기록을 왼쪽으로 push하고, 최대 100개까지만 보관
         ListOperations<String, ChatMessage> ops = redisTemplate.opsForList();
-        ops.rightPush(key, message);
-        ops.trim(key, -100, -1);
-    }
-
-    // 방별 채팅 기록을 저장할 키 패턴
-    private String historyKey(String roomId) {
-        return "chat:history:" + roomId;
+        String historyKey = "chat_history:" + message.getRoomId();
+        ops.leftPush(historyKey, message);
+        ops.trim(historyKey, 0, 99);
     }
 }

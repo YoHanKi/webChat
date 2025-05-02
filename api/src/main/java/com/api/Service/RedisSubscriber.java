@@ -1,35 +1,43 @@
 package com.api.Service;
 
 import com.api.model.ChatMessage;
+import com.api.websocket.handler.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.Message;
+import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class RedisSubscriber {
-    private final SimpMessagingTemplate messagingTemplate;
-    private final RedisTemplate<String, ChatMessage> redisTemplate;
+public class RedisSubscriber implements MessageListener {
+    private final ChatWebSocketHandler webSocketHandler;
 
-    // Redis로부터 메시지 수신 시 WebSocket으로 브로드캐스트
-    public void onMessage(Object message) {
-        if (message instanceof ChatMessage chat) {
-            // 1) 과거 기록 로드
-            String roomId = chat.getRoomId();
-            ListOperations<String, ChatMessage> ops = redisTemplate.opsForList();
-            List<ChatMessage> history = ops.range("chat:history:" + roomId, 0, -1);
-            if (history != null) {
-                for (ChatMessage msg : history) {
-                    messagingTemplate.convertAndSend("/topic/" + roomId, msg);
-                }
-            }
+    /**
+     * Redis 토픽에 발행된 메시지를 수신하면,
+     * WebSocketHandler를 통해 모든 세션에 브로드캐스트합니다.
+     */
+    @Override
+    public void onMessage(Message message, byte[] pattern) {
+        // Redis에서 넘어온 메시지(바디)를 JSON 문자열로 읽어들임
+        String json = new String(message.getBody(), StandardCharsets.UTF_8);
+        ChatMessage chat = ChatMessage.fromJson(json);
 
-            // 2) JOIN 메시지 브로드캐스트
-            messagingTemplate.convertAndSend("/topic/" + roomId, message);
+        // ChatWebSocketHandler에 브로드캐스트를 위임
+        try {
+            webSocketHandler.broadcast(chat);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
+
+
 }
