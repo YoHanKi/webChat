@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com'
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0-SNAPSHOT'
 
 java {
 	toolchain {
@@ -44,6 +44,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.register('dockerBuild', Exec) {
+	dependsOn 'bootJar'
+	workingDir projectDir
+	commandLine 'docker', 'build', '-t', "${project.name}:${version}", '-f', 'Dockerfile', '.'
 }
 
 tasks.named('test') {

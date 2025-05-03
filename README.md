@@ -1,3 +1,108 @@
+# WEBCHAT
+
+**WEBCHAT** (버전 0.1.0) - 2025/05/03
+
+Spring Boot 백엔드와 Nuxt 3 프론트엔드를 결합한 간단한 실시간 채팅 애플리케이션입니다.
+
+---
+
+## 목차
+
+* [기능](#기능)
+* [기술 스택](#기술-스택)
+* [시작하기](#시작하기)
+    * [필수 조건](#필수-조건)
+    * [설치 및 실행](#설치-및-실행)
+* [사용법](#사용법)
+* [API 참조](#api-참조)
+* [데이터베이스 스키마](#데이터베이스-스키마)
+* [문제 해결](#문제-해결)
+
+---
+
+## 기능
+
+* WebSocket 기반 실시간 메시징 (Redis Pub/Sub)
+* 세션 기반 인증 (JSON 로그인, JSESSIONID 사용)
+* 방(room)별 채팅 지원
+* 최근 100개 메시지를 Redis 리스트에 저장 및 MySQL로 영속화 (write-behind)
+* 사용자 회원가입, 로그인, 세션 확인 REST API 제공
+* Nuxt 3 + Vue 3 + Tailwind CSS 프론트엔드 구성
+* Docker Compose로 MySQL, Redis 실행 자동화
+
+---
+
+## 기술 스택
+
+| 구분     | 기술                             |
+| ------ | ------------------------------ |
+| 백엔드    | Spring Boot 3, Spring Security |
+| 메시징·캐시 | Redis (Pub/Sub, List)          |
+| 영속화    | MySQL (JPA, Hibernate)         |
+| 프론트엔드  | Nuxt 3, Vue 3, Tailwind CSS    |
+| 상태관리   | Pinia                          |
+| 도구     | Gradle, Lombok, SLF4J, Logback |
+| 컨테이너   | Docker Compose                 |
+
+---
+
+## 시작하기
+
+### 필수 조건
+
+* JDK 17 이상
+* Node.js 18 이상 & npm
+* Docker & Docker Compose
+
+### 설치 및 실행
+
+1. Docker Compose 실행
+
+   ```bash
+   docker-compose up -d
+   ```
+2. 브라우저에서 `http://localhost:3000` 접속
+
+---
+
+## 사용법
+
+1. **회원가입**: `/register` 페이지에서 사용자 생성
+2. **로그인**: `/login` 페이지에서 인증
+3. **채팅방 선택 또는 생성**
+4. **메시지 전송** 및 실시간 채팅 확인
+
+---
+
+## API 참조
+
+### 인증
+
+| 경로                   | 메서드  | 설명             |
+| -------------------- | ---- | -------------- |
+| `/api/user/register` | POST | 회원가입           |
+| `/api/login`         | POST | 로그인 (세션 쿠키 발급) |
+| `/api/logout`        | POST | 로그아웃 (세션 무효화)  |
+| `/api/user/me`       | GET  | 현재 로그인된 사용자 정보 |
+
+### 채팅
+
+| 경로                         | 메서드  | 설명                               |
+| -------------------------- | ---- | -------------------------------- |
+| `/ws/chat?roomId={roomId}` | GET  | WebSocket 핸드셰이크 (roomId 파라미터 포함) |
+| `/api/chat`                | POST | REST API를 통한 메시지 발행 (선택적 백업용)    |
+
+---
+
+## 데이터베이스 스키마
+
+* **users**        : id, username, password, role
+* **chat\_messages**: id, room\_id, sender, content, sent\_at
+
+---
+
+
+## 문제 해결
 ### 캐싱 전략
 
 - 메세지를 Redis를 활용하여 Pub/Sub으로 전송

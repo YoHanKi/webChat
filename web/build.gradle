@@ -2,12 +2,20 @@ plugins {
     id 'com.github.node-gradle.node' version '3.5.1'
 }
 
+version = '0.1.0-SNAPSHOT'
+
 node {
     version = '18.16.0'
     npmVersion = '9.5.0'
     download = true
     workDir = file("${project.buildDir}/nodejs")
     nodeModulesDir = file("${project.projectDir}")
+}
+
+tasks.register('dockerBuild', Exec) {
+    dependsOn 'npmBuild'
+    workingDir projectDir
+    commandLine 'docker', 'build', '-t', "${project.name}:${version}", '.'
 }
 
 tasks.register('npmBuild', com.github.gradle.node.npm.task.NpmTask) {
