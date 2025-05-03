@@ -7,6 +7,29 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      apiURL: process.env.API_URL || 'http://localhost:8080',
+    }
+  },
+
+  // Nuxt 3에서 serverMiddleware 대신 nitro.devProxy
+  nitro: {
+    devProxy: {
+      // REST API 프록시
+      '/api': {
+        target: process.env.API_URL || 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      // WebSocket 프록시
+      '/ws-chat': {
+        target: process.env.API_URL || 'ws://localhost:8080',
+        ws: true,
+        changeOrigin: true,
+      }
+    }
+  },
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/fonts',
@@ -14,14 +37,20 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/test-utils',
     '@nuxt/ui',
+    '@pinia/nuxt'
   ],
+
   vite: {
     server: {
       proxy: {
         '/api': {
-          target: 'http://api:8080',
+          target: 'http://localhost:8080',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
+        },
+        '/ws-chat': {
+          target: 'ws://localhost:8080',
+          changeOrigin: true,
+          ws: true,
         }
       }
     },

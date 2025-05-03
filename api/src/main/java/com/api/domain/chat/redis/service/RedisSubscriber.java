@@ -1,20 +1,13 @@
-package com.api.Service;
+package com.api.domain.chat.redis.service;
 
-import com.api.model.ChatMessage;
-import com.api.websocket.handler.ChatWebSocketHandler;
+import com.api.domain.chat.model.ChatMessage;
+import com.api.domain.chat.websocket.handler.ChatWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +25,7 @@ public class RedisSubscriber implements MessageListener {
         ChatMessage chat = ChatMessage.fromJson(json);
 
         // ChatWebSocketHandler에 브로드캐스트를 위임
-        try {
-            webSocketHandler.broadcast(chat);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        webSocketHandler.broadcast(chat);
     }
 
 

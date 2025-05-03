@@ -13,6 +13,7 @@ services:
       # docker-compose up -d -e SPRING_PROFILES_ACTIVE=dev
     depends_on:
       - redis
+      - mysql
 
   web:
     build:
@@ -34,5 +35,20 @@ services:
     volumes:
       - redis-data:/data
 
+  mysql:
+    image: mysql:8.0
+    container_name: chat-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234       # root 계정 비밀번호
+      MYSQL_DATABASE: webChat                 # 초기 생성할 데이터베이스
+      MYSQL_USER: user                    # JPA에서 사용할 계정
+      MYSQL_PASSWORD: 1234            # chat_user 비밀번호
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
 volumes:
   redis-data:
+  mysql_data:
