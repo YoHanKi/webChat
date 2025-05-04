@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequestCreateRoomDTO {
-    private String roomName;
-    private String roomDescription;
+    private String name;
+    private String description;
+    private Integer maxCapacity;
 }

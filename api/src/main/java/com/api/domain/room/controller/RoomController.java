@@ -25,8 +25,8 @@ public class RoomController {
             @RequestBody RequestCreateRoomDTO requestDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        roomService.createRoom(requestDTO, userDetails.getUserEntity());
-        return ResponseEntity.ok().build();
+        Long roomId = roomService.createRoom(requestDTO, userDetails.getUserEntity());
+        return ResponseEntity.ok().body(roomId);
     }
 
     // 방 조회
@@ -46,6 +46,7 @@ public class RoomController {
         roomService.updateRoom(
                 requestDTO.getRoomName(),
                 requestDTO.getRoomDescription(),
+                requestDTO.getMaxCapacity(),
                 roomId
         );
 

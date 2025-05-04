@@ -23,6 +23,10 @@ public class RoomEntity extends BaseDateEntity {
 
     private String roomDescription;
 
+    private Integer currentCapacity;
+
+    private Integer maxCapacity;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private UserEntity creator;
@@ -31,9 +35,14 @@ public class RoomEntity extends BaseDateEntity {
     @Column(nullable = false)
     private boolean deleted = false;
 
-    public void update(String roomName, String roomDescription) {
+    public void update(String roomName, String roomDescription, Integer maxCapacity) {
         this.roomName = roomName != null ? roomName : this.roomName;
         this.roomDescription = roomDescription != null ? roomDescription : this.roomDescription;
+        this.maxCapacity = maxCapacity != null ? maxCapacity : this.maxCapacity;
+    }
+
+    public void updateCurrentCapacity(int currentCapacity) {
+        this.currentCapacity = currentCapacity;
     }
 
     public void delete() {

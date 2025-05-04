@@ -15,6 +15,8 @@ public class ResponseReadRoomDTO {
     private String roomName;
     private String roomDescription;
     private String creatorName;
+    private Integer currentCapacity;
+    private Integer maxCapacity;
     private boolean isDeleted;
 
     public static ResponseReadRoomDTO convert(RoomEntity room) {
@@ -23,7 +25,12 @@ public class ResponseReadRoomDTO {
                 .roomName(room.getRoomName())
                 .roomDescription(room.getRoomDescription())
                 .creatorName(room.getCreator().getUsername())
+                .maxCapacity(room.getMaxCapacity())
                 .isDeleted(room.isDeleted())
                 .build();
+    }
+
+    public void updateCurrentCapacity(int currentCapacity) {
+        this.currentCapacity = currentCapacity;
     }
 }
