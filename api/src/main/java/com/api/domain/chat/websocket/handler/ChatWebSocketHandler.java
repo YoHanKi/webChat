@@ -48,7 +48,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         ListOperations<String, ChatMessage> ops = redisTemplate.opsForList();
         List<ChatMessage> history = ops.range(historyKey, 0, -1);
         if (history != null && !history.isEmpty()) {
-            // 3) 오래된 순서(마지막 원소) → 최신 순서로 역순 전송
             Collections.reverse(history);
             for (ChatMessage past : history) {
                 session.sendMessage(new TextMessage(past.toJson()));
@@ -71,14 +70,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.getAttributes().put("roomId", chat.getRoomId());
 
             // 2) 입장 메시지를 모든 클라이언트에 알림
-            ChatMessage joinNotice = new ChatMessage(
+            chat = new ChatMessage(
                     ChatMessage.MessageType.JOIN,
                     chat.getSender(),
                     chat.getSender() + "님이 입장하셨습니다.",
                     chat.getRoomId()
             );
-            redisPublisher.publish(joinNotice);
-            return;
         }
 
         // CHAT / LEAVE 등 나머지 메시지는 기존 로직 그대로 Redis에 발행
