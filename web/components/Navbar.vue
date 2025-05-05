@@ -38,6 +38,11 @@ function onLogout() {
             @click="onLogout"
             class="px-3 py-1 border rounded text-sm text-gray-700 hover:bg-gray-100 transition"
         >로그아웃</button>
+        <NuxtLink
+            v-if="auth.role === 'ADMIN' || auth.role === 'MANAGER'"
+            to="/room/create"
+            class="px-3 py-1 border rounded text-sm text-gray-700 hover:bg-gray-100 transition"
+            >채팅방 생성</NuxtLink>
       </div>
     </div>
   </nav>
