@@ -20,7 +20,7 @@ function onLogout() {
 
 <template>
   <nav class="bg-white shadow px-6 py-4 flex justify-between items-center">
-    <div class="text-2xl font-bold">Chat App</div>
+    <NuxtLink to="/" class="text-2xl font-bold">WebChat</NuxtLink>
     <div class="flex items-center space-x-4">
       <NuxtLink
           v-if="!auth.user"

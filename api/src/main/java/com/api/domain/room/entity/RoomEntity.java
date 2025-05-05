@@ -27,7 +27,7 @@ public class RoomEntity extends BaseDateEntity {
 
     private Integer maxCapacity;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
     private UserEntity creator;
 

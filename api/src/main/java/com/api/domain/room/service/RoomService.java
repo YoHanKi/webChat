@@ -67,17 +67,26 @@ public class RoomService {
                 .build();
     }
 
+    // 방 상세 조회
+    public ResponseReadRoomDTO readRoomById(Long roomId) {
+        // 방 상세 조회 로직
+        RoomEntity room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("방을 찾을 수 없습니다."));
+
+        return ResponseReadRoomDTO.convert(room);
+    }
+
     // 방 수정
     @Transactional
-    public void updateRoom(String roomName, String roomDescription, Integer maxCapacity, Long roomId) {
+    public void updateRoom(Long roomId, String roomName, String roomDescription, Integer maxCapacity) {
         // 방 수정 로직
         RoomEntity room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("방을 찾을 수 없습니다."));
 
         // 방이 수정/생성된 지 10분이 지나지 않았다면 수정 불가
-        if (room.getCreateDate().plusMinutes(10).isAfter(java.time.LocalDateTime.now())) {
-            throw new IllegalArgumentException("방 생성 후 10분 이내에는 수정할 수 없습니다.");
-        }
+//        if (room.getCreateDate().plusMinutes(10).isAfter(java.time.LocalDateTime.now())) {
+//            throw new IllegalArgumentException("방 생성 후 10분 이내에는 수정할 수 없습니다.");
+//        }
 
         room.update(roomName, roomDescription, maxCapacity);
 
@@ -95,7 +104,7 @@ public class RoomService {
         room.delete();
 
         // Redis에 방 정보 삭제
-        redisRoomRepository.deleteRoom(roomId);
+        // redisRoomRepository.deleteRoom(roomId);
 
         // 명시적으로 save 호출
         roomRepository.save(room);

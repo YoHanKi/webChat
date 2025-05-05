@@ -8,11 +8,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RequestUpdateRoomDTO {
+    private Long roomId;
     private String roomName;
     private String roomDescription;
     private Integer maxCapacity;
 
-    public static RequestUpdateRoomDTO of(String roomName, String roomDescription, Integer maxCapacity) {
-        return new RequestUpdateRoomDTO(roomName, roomDescription, maxCapacity);
+    public static RequestUpdateRoomDTO of(Long roomId, String roomName, String roomDescription, Integer maxCapacity) {
+        return new RequestUpdateRoomDTO(roomId, roomName, roomDescription, maxCapacity);
     }
 }

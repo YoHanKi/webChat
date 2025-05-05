@@ -99,7 +99,7 @@ const createRoom = async () => {
 
     const createdRoom = await response.json();
 
-    router.push(`/chat/${createdRoom.roomId}`); // 생성된 방 ID가 응답으로 온다고 가정
+    router.push(`/chat/${createdRoom}`); // 생성된 방 ID가 응답으로 온다고 가정
 
   } catch (error) {
     console.error('채팅방 생성 오류:', error);

@@ -37,17 +37,23 @@ public class RoomController {
         return ResponseEntity.ok(roomService.readRoomSlice(pageable));
     }
 
+    @GetMapping("/read/{roomId}")
+    public ResponseEntity<ResponseReadRoomDTO> readRoomById(
+            @PathVariable Long roomId
+    ) {
+        return ResponseEntity.ok(roomService.readRoomById(roomId));
+    }
+
     // 방 수정
     @PutMapping("/update")
     public ResponseEntity<?> updateRoom(
-            @RequestBody RequestUpdateRoomDTO requestDTO,
-            Long roomId
+            @RequestBody RequestUpdateRoomDTO requestDTO
     ) {
         roomService.updateRoom(
+                requestDTO.getRoomId(),
                 requestDTO.getRoomName(),
                 requestDTO.getRoomDescription(),
-                requestDTO.getMaxCapacity(),
-                roomId
+                requestDTO.getMaxCapacity()
         );
 
         return ResponseEntity.ok().build();
