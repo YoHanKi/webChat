@@ -1,11 +1,14 @@
 package com.api.config;
 
-import com.api.domain.chat.redis.service.RedisSubscriber;
 import com.api.domain.chat.model.ChatMessage;
+import com.api.domain.chat.redis.service.RedisSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
@@ -40,5 +43,48 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(ChatMessage.class));
         return template;
+    }
+
+    @Bean
+    public RedisTemplate<String, String> allowanceRedisTemplate(RedisConnectionFactory cf) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
+        template.setConnectionFactory(cf);
+
+        StringRedisSerializer stringSer = new StringRedisSerializer();
+        template.setKeySerializer(stringSer);          // key
+        template.setValueSerializer(stringSer);       // value
+        template.setHashKeySerializer(stringSer);      // hash key
+        template.setHashValueSerializer(stringSer);    // hash value
+
+        template.setEnableTransactionSupport(false);
+        template.afterPropertiesSet();
+        return template;
+    }
+
+    // Lua script: currentCapacity < maxCapacity 일 때만 증가시키고, 아니면 -1 반환
+    private static final String LUA_SCRIPT =
+            // currentCapacity, maxCapacity을 숫자(또는 기본 0)로 파싱
+            "local curr = tonumber(redis.call('HGET', KEYS[1], 'currentCapacity') or '0')\n"
+                    + "local max  = tonumber(redis.call('HGET', KEYS[1], 'maxCapacity')     or '0')\n"
+                    // ARGV[1]이 없거나 잘못된 값이면 0
+                    + "local inc  = tonumber(ARGV[1]) or 0\n"
+                    + "if curr < max then\n"
+                    + "  local after = curr + inc\n"
+                    // 항상 순수 숫자 문자열로 덮어쓰기
+                    + "  redis.call('HSET', KEYS[1], 'currentCapacity', tostring(after))\n"
+                    + "  return after\n"
+                    + "else\n"
+                    + "  return -1\n"
+                    + "end";
+
+    /**
+     * RedisScript<Long> 빈 등록: Lua 스크립트 실행용
+     */
+    @Bean
+    public RedisScript<Long> roomAllowanceScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText(LUA_SCRIPT);
+        script.setResultType(Long.class);
+        return script;
     }
 }

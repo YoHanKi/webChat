@@ -1,11 +1,12 @@
 package com.api.domain.chat.websocket.handler;
 
 import com.api.domain.chat.model.ChatMessage;
+import com.api.domain.chat.redis.repository.RedisRoomRepository;
 import com.api.domain.chat.redis.service.RedisPublisher;
+import com.api.domain.room.exception.RoomFullException;
+import com.api.domain.room.service.RoomService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.ListOperations;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -26,29 +27,33 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
+    private final RoomService roomService;
     private final RedisPublisher redisPublisher;
-    private final RedisTemplate<String, ChatMessage> redisTemplate;
-    Map<String, Set<WebSocketSession>> sessionsByRoom = new ConcurrentHashMap<>();
+    private final Map<String, Set<WebSocketSession>> sessionsByRoom = new ConcurrentHashMap<>();
 
     /**
      * WebSocket 연결이 수립되면 호출되는 메서드.
      * @param session WebSocketSession
      */
     @Override
-    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {;
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         // 1) roomId 파싱 (쿼리 파라미터로 전달된 값)
         String roomId = getRoomIdFromHandshake(session);
+
+        // TODO : roomService 에서 roomId 인원을 추가 및 제한을 체크하는 로직 추가
+        Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), 1L);
+
+        if (current == -1) {
+            throw new RoomFullException("방이 가득 찼습니다.");
+        }
 
         sessionsByRoom.computeIfAbsent(roomId, k -> ConcurrentHashMap.newKeySet())
                 .add(session);
 
-        String historyKey = "chat_history:" + roomId;
-
         // 2) Redis에서 히스토리 조회
-        ListOperations<String, ChatMessage> ops = redisTemplate.opsForList();
-        List<ChatMessage> history = ops.range(historyKey, 0, -1);
+        List<ChatMessage> history = roomService.getAllChatHistory(roomId);
+
         if (history != null && !history.isEmpty()) {
-            // 3) 오래된 순서(마지막 원소) → 최신 순서로 역순 전송
             Collections.reverse(history);
             for (ChatMessage past : history) {
                 session.sendMessage(new TextMessage(past.toJson()));
@@ -71,17 +76,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.getAttributes().put("roomId", chat.getRoomId());
 
             // 2) 입장 메시지를 모든 클라이언트에 알림
-            ChatMessage joinNotice = new ChatMessage(
+            chat = new ChatMessage(
                     ChatMessage.MessageType.JOIN,
                     chat.getSender(),
                     chat.getSender() + "님이 입장하셨습니다.",
                     chat.getRoomId()
             );
-            redisPublisher.publish(joinNotice);
-            return;
         }
 
-        // CHAT / LEAVE 등 나머지 메시지는 기존 로직 그대로 Redis에 발행
         redisPublisher.publish(chat);
     }
 
@@ -105,6 +107,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     username + "님이 퇴장하셨습니다.",
                     roomId
             );
+
+            // 방 인원 수 감소
+            Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), -1L);
+
+            if (current == 0) {
+                // 방 삭제 로직
+                roomService.deleteRoom(Long.valueOf(roomId));
+            }
 
             redisPublisher.publish(leave);
         }

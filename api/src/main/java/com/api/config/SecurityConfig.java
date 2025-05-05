@@ -76,7 +76,7 @@ public class SecurityConfig {
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/user/register").permitAll()
+                        .requestMatchers("/api/login", "/api/user/register", "/api/room/read").permitAll()
                         .anyRequest().authenticated()
                 )
                 // 직접 등록한 DaoAuthenticationProvider 사용

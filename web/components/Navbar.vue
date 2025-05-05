@@ -20,7 +20,7 @@ function onLogout() {
 
 <template>
   <nav class="bg-white shadow px-6 py-4 flex justify-between items-center">
-    <div class="text-2xl font-bold">Chat App</div>
+    <NuxtLink to="/" class="text-2xl font-bold">WebChat</NuxtLink>
     <div class="flex items-center space-x-4">
       <NuxtLink
           v-if="!auth.user"
@@ -38,6 +38,11 @@ function onLogout() {
             @click="onLogout"
             class="px-3 py-1 border rounded text-sm text-gray-700 hover:bg-gray-100 transition"
         >로그아웃</button>
+        <NuxtLink
+            v-if="auth.role === 'ADMIN' || auth.role === 'MANAGER'"
+            to="/room/create"
+            class="px-3 py-1 border rounded text-sm text-gray-700 hover:bg-gray-100 transition"
+            >채팅방 생성</NuxtLink>
       </div>
     </div>
   </nav>
