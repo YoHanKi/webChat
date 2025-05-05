@@ -27,9 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
-    private final RedisPublisher redisPublisher;
-    private final RedisRoomRepository redisRoomRepository;
     private final RoomService roomService;
+    private final RedisPublisher redisPublisher;
     private final Map<String, Set<WebSocketSession>> sessionsByRoom = new ConcurrentHashMap<>();
 
     /**
@@ -85,7 +84,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             );
         }
 
-        // CHAT / LEAVE 등 나머지 메시지는 기존 로직 그대로 Redis에 발행
         redisPublisher.publish(chat);
     }
 

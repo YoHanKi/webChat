@@ -41,8 +41,13 @@ public class RoomService {
         RoomEntity room = roomRepository.save(RoomEntity.builder()
                 .roomName(requestDTO.getName())
                 .roomDescription(requestDTO.getDescription())
+                .currentCapacity(0) // 현재 인원 수
+                .maxCapacity(requestDTO.getMaxCapacity())
                 .creator(creator)
                 .build());
+
+        // Redis에 방 정보 추가
+        redisRoomRepository.addRoom(room.getRoomId(), room.getMaxCapacity());
 
         return room.getRoomId();
     }
