@@ -11,22 +11,23 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResponseReadRoomDTO {
-    private Long roomId;
-    private String roomName;
-    private String roomDescription;
+    private Long id;
+    private String name;
+    private String description;
     private String creatorName;
     private Integer currentCapacity;
     private Integer maxCapacity;
-    private boolean isDeleted;
+    private boolean deleted;
 
     public static ResponseReadRoomDTO convert(RoomEntity room) {
         return ResponseReadRoomDTO.builder()
-                .roomId(room.getRoomId())
-                .roomName(room.getRoomName())
-                .roomDescription(room.getRoomDescription())
+                .id(room.getRoomId())
+                .name(room.getRoomName())
+                .description(room.getRoomDescription())
                 .creatorName(room.getCreator().getUsername())
+                .currentCapacity(room.getCurrentCapacity())
                 .maxCapacity(room.getMaxCapacity())
-                .isDeleted(room.isDeleted())
+                .deleted(room.isDeleted())
                 .build();
     }
 

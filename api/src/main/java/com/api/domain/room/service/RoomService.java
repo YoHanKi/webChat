@@ -109,7 +109,7 @@ public class RoomService {
                 .orElseThrow(() -> new IllegalArgumentException("방을 찾을 수 없습니다."));
 
         // Redis에 방 정보 업데이트
-        Long current = redisRoomRepository.updateCurrentCapacity(roomId, increment);
+        Long current = redisRoomRepository.increaseCurrentCapacity(roomId, increment);
 
         room.updateCurrentCapacity(current.intValue());
 

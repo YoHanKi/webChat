@@ -32,7 +32,7 @@ public class RoomController {
     // 방 조회
     @GetMapping("/read")
     public ResponseEntity<CustomSlice<ResponseReadRoomDTO>> readRoom(
-            @PageableDefault(size = 6, page = 0, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 6, page = 0, sort = "createDate") Pageable pageable
     ) {
         return ResponseEntity.ok(roomService.readRoomSlice(pageable));
     }

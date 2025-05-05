@@ -2,7 +2,6 @@ package com.api.config;
 
 import com.api.domain.chat.model.ChatMessage;
 import com.api.domain.chat.redis.service.RedisSubscriber;
-import com.api.domain.room.model.RoomAllowance;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -46,37 +45,33 @@ public class RedisConfig {
         return template;
     }
 
-    /**
-     * RoomAllowance RedisTemplate을 위한 RedisConnectionFactory를 설정합니다.
-     */
     @Bean
-    public RedisTemplate<String, RoomAllowance> allowanceRedisTemplate(RedisConnectionFactory cf) {
-        RedisTemplate<String, RoomAllowance> template = new RedisTemplate<>();
+    public RedisTemplate<String, String> allowanceRedisTemplate(RedisConnectionFactory cf) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(cf);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(RoomAllowance.class));
-        template.setEnableTransactionSupport(true); // 트랜잭션 지원 활성화
-        template.afterPropertiesSet(); // 초기화
 
+        StringRedisSerializer stringSer = new StringRedisSerializer();
+        template.setKeySerializer(stringSer);          // key
+        template.setValueSerializer(stringSer);       // value
+        template.setHashKeySerializer(stringSer);      // hash key
+        template.setHashValueSerializer(stringSer);    // hash value
+
+        template.setEnableTransactionSupport(false);
+        template.afterPropertiesSet();
         return template;
-    }
-
-    /**
-     * String 기반 Redis 연산(카운터, 간단한 값 등)을 위해 StringRedisTemplate 빈을 추가합니다.
-     */
-    @Bean
-    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
-        return new StringRedisTemplate(connectionFactory);
     }
 
     // Lua script: currentCapacity < maxCapacity 일 때만 증가시키고, 아니면 -1 반환
     private static final String LUA_SCRIPT =
-            "local curr = redis.call('HGET', KEYS[1], 'currentCapacity')\n"
-                    + "local max  = redis.call('HGET', KEYS[1], 'maxCapacity')\n"
-                    + "curr = tonumber(curr) or 0\n"
-                    + "max  = tonumber(max)  or 0\n"
+            // currentCapacity, maxCapacity을 숫자(또는 기본 0)로 파싱
+            "local curr = tonumber(redis.call('HGET', KEYS[1], 'currentCapacity') or '0')\n"
+                    + "local max  = tonumber(redis.call('HGET', KEYS[1], 'maxCapacity')     or '0')\n"
+                    // ARGV[1]이 없거나 잘못된 값이면 0
+                    + "local inc  = tonumber(ARGV[1]) or 0\n"
                     + "if curr < max then\n"
-                    + "  local after = redis.call('HINCRBY', KEYS[1], 'currentCapacity', ARGV[1])\n"
+                    + "  local after = curr + inc\n"
+                    // 항상 순수 숫자 문자열로 덮어쓰기
+                    + "  redis.call('HSET', KEYS[1], 'currentCapacity', tostring(after))\n"
                     + "  return after\n"
                     + "else\n"
                     + "  return -1\n"

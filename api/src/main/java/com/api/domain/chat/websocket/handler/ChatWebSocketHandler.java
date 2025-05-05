@@ -36,7 +36,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      * @param session WebSocketSession
      */
     @Override
-    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {;
+    public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         // 1) roomId 파싱 (쿼리 파라미터로 전달된 값)
         String roomId = getRoomIdFromHandshake(session);
 
