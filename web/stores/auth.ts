@@ -37,6 +37,25 @@ export const useAuthStore = defineStore('auth', {
                 throw new Error(data.error || '회원가입에 실패했습니다.')
             }
         },
+        validate(user) {
+            if (user !== null) {
+                // null이 아니라면 검증
+                fetch('/api/user/auth', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            this.logout()
+                            throw new Error('세션이 만료되었습니다.')
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Session validation failed:', err)
+                        this.logout()
+                })
+            }
+        },
         logout() {
             this.user = null
             this.role = null
