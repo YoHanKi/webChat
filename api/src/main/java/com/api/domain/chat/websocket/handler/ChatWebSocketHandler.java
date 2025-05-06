@@ -1,12 +1,12 @@
 package com.api.domain.chat.websocket.handler;
 
 import com.api.domain.chat.model.ChatMessage;
-import com.api.domain.chat.redis.repository.RedisRoomRepository;
 import com.api.domain.chat.redis.service.RedisPublisher;
 import com.api.domain.room.exception.RoomFullException;
 import com.api.domain.room.service.RoomService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
@@ -40,8 +41,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 1) roomId 파싱 (쿼리 파라미터로 전달된 값)
         String roomId = getRoomIdFromHandshake(session);
 
-        // TODO : roomService 에서 roomId 인원을 추가 및 제한을 체크하는 로직 추가
-        Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), 1L);
+        // TODO: 먼저 인원이 찼는지 확인 후 업데이트 해야한다.
+        Long current = roomService.updateOnlyCurrentCapacity(Long.valueOf(roomId), 1L);
 
         if (current == -1) {
             throw new RoomFullException("방이 가득 찼습니다.");
@@ -76,13 +77,36 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.getAttributes().put("roomId", chat.getRoomId());
 
             // 2) 입장 메시지를 모든 클라이언트에 알림
-            chat = new ChatMessage(
-                    ChatMessage.MessageType.JOIN,
+            chat = switchChatMessageType(ChatMessage.MessageType.JOIN, chat.getSender(), chat.getRoomId());;
+        } else if (chat.getType() == ChatMessage.MessageType.KICK) {
+            // 1) 강퇴 메시지 처리
+            chat = switchChatMessageType(ChatMessage.MessageType.KICK, chat);
+
+            // DB 조회하며, 방장인지 확인
+            roomService.kickUser(
+                    Long.valueOf(chat.getRoomId()),
                     chat.getSender(),
-                    chat.getSender() + "님이 입장하셨습니다.",
-                    chat.getRoomId()
+                    session.getAttributes().get("username").toString(),
+                    chat.getContent()
             );
+
+            // 2) 강퇴된 사용자의 세션을 종료
+            ChatMessage finalChat = chat;
+            sessionsByRoom.getOrDefault(chat.getRoomId(), Set.of())
+                    .stream()
+                    .filter(sess -> finalChat.getContent().equals(sess.getAttributes().get("username")))
+                    .findFirst()
+                    .ifPresent(sess -> {
+                        try {
+                            sess.close(CloseStatus.NOT_ACCEPTABLE);
+                        } catch (IOException e) {
+                            log.error("Error closing session: {}", e.getMessage());
+                        }
+                    });
         }
+
+        // TODO : 채팅방 인원 목록에 추가 및 RoomEntity를 업데이트 해준다.
+         roomService.updateRoomUserCount(chat);
 
         redisPublisher.publish(chat);
     }
@@ -101,20 +125,15 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .remove(session);
 
         if (username != null) {
-            ChatMessage leave = new ChatMessage(
-                    ChatMessage.MessageType.LEAVE,
-                    username,
-                    username + "님이 퇴장하셨습니다.",
-                    roomId
-            );
+            ChatMessage leave = switchChatMessageType(ChatMessage.MessageType.LEAVE, username, roomId);
 
             // 방 인원 수 감소
             Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), -1L);
 
-            if (current == 0) {
-                // 방 삭제 로직
-                roomService.deleteRoom(Long.valueOf(roomId));
-            }
+//            if (current == 0) {
+//                // 방 삭제 로직
+//                roomService.deleteRoom(Long.valueOf(roomId));
+//            }
 
             redisPublisher.publish(leave);
         }
@@ -125,6 +144,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      * @param chat Redis에서 발행된 메시지
      */
     public void broadcast(ChatMessage chat) {
+        // 회원 목록 갱신은 JOIN/LEAVE 메시지에 대해서만 수행
+        if (chat.getType() == ChatMessage.MessageType.JOIN || chat.getType() == ChatMessage.MessageType.LEAVE) {
+            roomService.addRoomEvent(chat);
+            chat.setCurrentUserList(roomService.getRoomMembersDetailed(chat.getRoomId()));
+        }
         TextMessage packet = new TextMessage(chat.toJson());
         sessionsByRoom.getOrDefault(chat.getRoomId(), Set.of())
                 .forEach(sess -> {
@@ -156,4 +180,33 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         throw new IllegalArgumentException("roomId parameter is missing in WebSocket URI");
     }
 
+    private ChatMessage switchChatMessageType(ChatMessage.MessageType type, String sender, String roomId) {
+        return switchChatMessageType(type, new ChatMessage(type, sender, "", roomId));
+    }
+
+    private ChatMessage switchChatMessageType(ChatMessage.MessageType type, ChatMessage chat) {
+        if (type == ChatMessage.MessageType.JOIN) {
+            return new ChatMessage(
+                    ChatMessage.MessageType.JOIN,
+                    chat.getSender(),
+                    chat.getSender() + "님이 입장하셨습니다.",
+                    chat.getRoomId()
+            );
+        } else if (type == ChatMessage.MessageType.LEAVE) {
+            return new ChatMessage(
+                    ChatMessage.MessageType.LEAVE,
+                    chat.getSender(),
+                    chat.getSender() + "님이 퇴장하셨습니다.",
+                    chat.getRoomId()
+            );
+        } else if (type == ChatMessage.MessageType.KICK) {
+            return new ChatMessage(
+                    ChatMessage.MessageType.KICK,
+                    chat.getSender(),
+                    chat.getSender() + "님이 " + chat.getContent() + "님을 " + "강퇴하였습니다.",
+                    chat.getRoomId()
+            );
+        }
+        return chat;
+    }
 }

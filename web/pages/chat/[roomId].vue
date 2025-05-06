@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-col h-screen bg-gray-50">
+  <div class="flex flex-col h-screen bg-gray-100">
     <!-- Header -->
     <header class="bg-[#03C75A] text-white p-4 flex items-center justify-between shadow-md">
-      <div class="flex flex-col items-center">
+      <div class="flex flex-col">
         <h1 class="text-2xl font-bold">{{ room.name }}</h1>
-        <span class="text-sm opacity-75">User: {{ username }}</span>
+        <span class="text-sm opacity-75">{{ room.description }}</span>
       </div>
       <!-- 방장 수정 버튼 -->
       <button
@@ -16,92 +16,89 @@
       </button>
     </header>
 
-    <!-- Chat messages -->
-    <!-- justify-end 제거하여 스크롤이 자연스럽게 위에서부터 쌓이도록 함 -->
-    <main ref="container" class="flex-1 overflow-y-auto p-6 flex flex-col space-y-4">
-      <div
-          v-for="(msg, idx) in messages"
-          :key="idx"
-          :class="[
-            'flex items-start max-w-xl',
-            msg.type !== 'CHAT'
-              ? 'self-center' // 시스템 메시지는 가운데 정렬 유지
-              : msg.sender === username
-                ? 'self-end'
-                : 'self-start',
-          ]"
-      >
-        <!-- 시스템 메시지가 아닐 경우 프로필 이미지 표시 -->
-        <img
-            v-if="msg.type === 'CHAT'"
-            :src="msg.senderImg || defaultAvatar"
-            alt="avatar"
-            class="w-8 h-8 rounded-full mr-3"
-            :class="{ 'order-last ml-3 mr-0': msg.sender === username }"
+    <!-- Main content area -->
+    <div class="flex flex-1 p-4 gap-4 overflow-hidden">
+      <!-- Left side: Streaming area -->
+      <div class="w-2/3 h-full">
+        <StreamingArea
+            :roomId="roomId"
+            :isOwner="isOwner"
         />
-        <div
-            :class="[
-              'px-4 py-2 rounded-lg',
-              msg.type !== 'CHAT'
-                ? 'bg-gray-200 text-gray-600 italic' // 시스템 메시지 스타일
-                : msg.sender === username
-                  ? 'bg-[#03C75A] text-white' // 내 메시지
-                  : 'bg-white text-gray-800 shadow-sm', // 다른 사람 메시지
-            ]"
-        >
-          <!-- 채팅 메시지 내용 -->
-          <div v-if="msg.type === 'CHAT'">
-            <p class="font-semibold mb-1" :class="{ 'text-right': msg.sender === username }">{{ msg.sender }}</p>
-            <p>{{ msg.content }}</p>
-          </div>
-          <!-- 시스템 메시지 내용 -->
-          <div v-else>
-            <p>{{ msg.content }}</p>
-          </div>
+      </div>
+
+      <!-- Right side: Users list and chat -->
+      <div class="w-1/3 h-full flex flex-col gap-4">
+        <!-- Users dropdown toggle -->
+        <div class="bg-white rounded-lg shadow-md p-2 flex items-center justify-between">
+          <span class="font-medium text-gray-700">참가자 목록</span>
+          <button
+              @click="toggleUsersList"
+              class="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-gray-600 transition-transform"
+                :class="{ 'rotate-180': showUsersList }"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+            >
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Users list (collapsible) -->
+        <transition name="slide">
+          <UsersList
+              v-if="showUsersList"
+              :roomId="roomId"
+              :isOwner="isOwner"
+              :currentUsername="username"
+              :maxCapacity="room.maxCapacity || 10"
+              ref="usersListRef"
+              class="flex-none max-h-[150px] overflow-y-auto bg-white rounded-lg shadow-md"
+              @kick-user="onKickUser"
+          />
+        </transition>
+
+        <!-- Chat area -->
+        <div class="flex-1 overflow-hidden bg-white rounded-lg shadow-md">
+          <ChatRoom
+              :roomId="roomId"
+              :username="username"
+              ref="chatRoomRef"
+          />
         </div>
       </div>
-    </main>
-
-    <!-- Input -->
-    <footer class="bg-white p-4 shadow-inner flex items-center">
-      <input
-          v-model="input"
-          @keyup.enter="sendMessage"
-          placeholder="메시지를 입력하세요..."
-          class="flex-1 border border-gray-300 rounded-l-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#03C75A]"
-      />
-      <button
-          @click="sendMessage"
-          class="bg-[#03C75A] hover:bg-[#02af4f] text-white px-6 py-2 rounded-r-xl shadow-md transition"
-      >
-        전송
-      </button>
-    </footer>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-// Nuxt 3의 내장 fetch 사용
 import { $fetch } from 'ofetch';
-// 기본 아바타 이미지 import
-import defaultAvatar from '~/assets/images/defaultMsgImg.svg';
+import UsersList from '~/components/chat/UsersList.vue';
+import ChatRoom from '~/components/chat/ChatRoom.vue';
+import StreamingArea from '~/components/chat/StreamingArea.vue';
 
 const route = useRoute();
 const router = useRouter();
 const roomId = route.params.roomId;
-const messages = ref([]);
-const input = ref('');
 const username = ref('');
-const room = ref({ id: roomId, name: '로딩 중...', creatorName: null }); // ownerId 추가
-const isOwner = ref(false); // 방장 여부 상태 추가
-let socket;
-const container = ref(null);
+const room = ref({ id: roomId, name: '로딩 중...', description: '', maxCapacity: 10, creatorName: null });
+const isOwner = ref(false);
+
+// 컴포넌트 참조
+const chatRoomRef = ref(null);
+const usersListRef = ref(null);
+
+// 유저 목록 표시 상태
+const showUsersList = ref(false);
 
 onMounted(async () => {
   try {
-    // 세션에서 가져옴
+    // 세션에서 사용자 이름 가져오기
     const name = sessionStorage.getItem('username');
     if (!name) {
       router.push('/login');
@@ -109,101 +106,68 @@ onMounted(async () => {
     }
     username.value = name;
 
+    // 방 상세 정보 가져오기
     await fetchRoomDetails();
 
-    // 2. 웹소켓 연결 (이제 username.value는 서버에서 확인된 값)
-    socket = new WebSocket(`ws://localhost:8080/ws-chat?roomId=${roomId}`);
-
-
-    socket.onopen = () => {
-      // 3. JOIN 메시지에 서버에서 확인된 사용자 이름 사용
-      socket.send(JSON.stringify({ type: 'JOIN', sender: name, content: '', roomId }));
-    };
-
-    socket.onmessage = (event) => {
-      const chat = JSON.parse(event.data);
-      if (chat.roomId === roomId) {
-        messages.value.push(chat);
-        nextTick(() => {
-          if (container.value) {
-            container.value.scrollTop = container.value.scrollHeight;
-          }
-        });
-      }
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket 오류:', error);
-      // 오류 처리 로직 (예: 사용자에게 알림)
-      router.push('/');
-    };
-
-    socket.onclose = (event) => {
-      console.log('WebSocket 연결 종료:', event);
-    };
-
   } catch (error) {
-    console.error('인증 또는 초기화 오류:', error);
-    // $fetch 실패 시 (예: 401 Unauthorized) 로그인 페이지로 리디렉션
+    console.error('초기화 오류:', error);
     if (error.response && error.response.status === 401) {
       router.push('/login');
     } else {
-      // 다른 종류의 오류 처리 (예: 네트워크 오류)
       alert('채팅방 정보를 불러오는 중 오류가 발생했습니다.');
       router.push('/');
     }
   }
 });
 
-// 방 상세 정보 가져오는 함수 (API 호출 필요)
+// 유저 목록 토글 함수
+function toggleUsersList() {
+  showUsersList.value = !showUsersList.value;
+}
+
+function onKickUser({ roomId, userId, content }) {
+  // WebSocket으로 KICK 메시지 전송
+  if (chatRoomRef.value && chatRoomRef.value.sendKick) {
+    chatRoomRef.value.sendKick(roomId, userId, content);
+  }
+}
+
+// 방 상세 정보 가져오기
 async function fetchRoomDetails() {
   try {
     const roomData = await $fetch(`/api/room/read/${roomId}`);
-    room.value = { ...room.value, ...roomData }; // API 응답으로 room 정보 업데이트
+    room.value = {
+      ...room.value,
+      ...roomData
+    };
 
     // 현재 사용자가 방장인지 확인
     isOwner.value = username.value === room.value.creatorName;
 
   } catch (error) {
     console.error('방 정보를 가져오는데 실패했습니다:', error);
-    // 오류 처리 (예: 사용자에게 알림)
     alert('방 정보를 불러오는 중 오류가 발생했습니다.');
     router.push('/');
   }
 }
 
-// 스크롤을 맨 아래로 이동시키는 함수
-function scrollToBottom() {
-  nextTick(() => {
-    if (container.value) {
-      container.value.scrollTop = container.value.scrollHeight;
-    }
-  });
-}
-
-function sendMessage() {
-  if (!input.value.trim()) return;
-  const chat = { type: 'CHAT', sender: username.value, content: input.value.trim(), roomId };
-  socket.send(JSON.stringify(chat));
-  input.value = '';
-}
-
-// 방 수정 페이지로 이동하는 함수
+// 방 수정 페이지로 이동
 function goToUpdatePage() {
   router.push(`/room/update/${roomId}`);
 }
-
-onBeforeUnmount(() => {
-  if (socket) socket.close();
-});
 </script>
 
 <style scoped>
-main::-webkit-scrollbar {
-  width: 8px;
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+  max-height: 150px;
+  overflow: hidden;
 }
-main::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+
+.slide-enter-from,
+.slide-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 </style>

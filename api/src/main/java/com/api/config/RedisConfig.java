@@ -5,6 +5,7 @@ import com.api.domain.chat.redis.service.RedisSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -14,6 +15,10 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer;
+import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
+
+import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
@@ -86,5 +91,29 @@ public class RedisConfig {
         script.setScriptText(LUA_SCRIPT);
         script.setResultType(Long.class);
         return script;
+    }
+
+    /**
+     * 문자열 키·값 연산용 템플릿.
+     * Set, Stream, String 값 INCR/DECR 등에 사용합니다.
+     */
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory cf) {
+        return new StringRedisTemplate(cf);
+    }
+
+    /**
+     * Redis Streams 컨슈머를 사용하려면 StreamMessageListenerContainer 빈 추가.
+     */
+    @Bean
+    public StreamMessageListenerContainer<String, ObjectRecord<String, ChatMessage>> streamListenerContainer(RedisConnectionFactory cf) {
+        StreamMessageListenerContainerOptions<String, ObjectRecord<String, ChatMessage>> opts =
+                StreamMessageListenerContainerOptions.builder()
+                        .pollTimeout(Duration.ofSeconds(1))
+                        .targetType(ChatMessage.class) // ObjectRecord<String, ChatMessage>
+                        .build();
+
+        // 3) 컨테이너 생성
+        return StreamMessageListenerContainer.create(cf, opts);
     }
 }

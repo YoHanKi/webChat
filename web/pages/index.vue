@@ -42,7 +42,9 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useAuthStore } from "~/stores/auth.js";
 
+const auth = useAuthStore()
 const rooms = ref([]);
 const page = ref(0); // 페이지 번호 (0부터 시작)
 const size = ref(6); // 한 페이지에 불러올 방 개수 (그리드 3열 기준)
@@ -96,6 +98,8 @@ const handleScroll = () => {
 };
 
 onMounted(() => {
+  // 회원 정보 확인
+  auth.validate(sessionStorage.getItem("username"));
   fetchRooms(); // 초기 데이터 로드
   window.addEventListener('scroll', handleScroll); // window에 스크롤 이벤트 리스너 추가
 });
