@@ -24,7 +24,7 @@ public class ChatMessage implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public enum MessageType { CHAT, JOIN, LEAVE }
+    public enum MessageType { CHAT, JOIN, LEAVE, KICK }
 
     private MessageType type;
     private String sender;

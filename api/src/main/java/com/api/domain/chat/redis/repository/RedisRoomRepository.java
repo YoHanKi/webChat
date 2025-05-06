@@ -67,6 +67,12 @@ public class RedisRoomRepository {
                 stringRedisTemplate.opsForSet().remove(roomKey, userId);
                 break;
 
+            case KICK:
+                // KICK → 멤버 셋에서 제거
+                String kickUserId = message.getContent();
+                stringRedisTemplate.opsForSet().remove(roomKey, kickUserId);
+                break;
+
             default:
                 // 그 외의 경우는 무시
                 return -1;

@@ -6,6 +6,7 @@ import com.api.domain.room.exception.RoomFullException;
 import com.api.domain.room.service.RoomService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
@@ -75,12 +77,32 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.getAttributes().put("roomId", chat.getRoomId());
 
             // 2) 입장 메시지를 모든 클라이언트에 알림
-            chat = new ChatMessage(
-                    ChatMessage.MessageType.JOIN,
+            chat = switchChatMessageType(ChatMessage.MessageType.JOIN, chat.getSender(), chat.getRoomId());;
+        } else if (chat.getType() == ChatMessage.MessageType.KICK) {
+            // 1) 강퇴 메시지 처리
+            chat = switchChatMessageType(ChatMessage.MessageType.KICK, chat);
+
+            // DB 조회하며, 방장인지 확인
+            roomService.kickUser(
+                    Long.valueOf(chat.getRoomId()),
                     chat.getSender(),
-                    chat.getSender() + "님이 입장하셨습니다.",
-                    chat.getRoomId()
+                    session.getAttributes().get("username").toString(),
+                    chat.getContent()
             );
+
+            // 2) 강퇴된 사용자의 세션을 종료
+            ChatMessage finalChat = chat;
+            sessionsByRoom.getOrDefault(chat.getRoomId(), Set.of())
+                    .stream()
+                    .filter(sess -> finalChat.getContent().equals(sess.getAttributes().get("username")))
+                    .findFirst()
+                    .ifPresent(sess -> {
+                        try {
+                            sess.close(CloseStatus.NOT_ACCEPTABLE);
+                        } catch (IOException e) {
+                            log.error("Error closing session: {}", e.getMessage());
+                        }
+                    });
         }
 
         // TODO : 채팅방 인원 목록에 추가 및 RoomEntity를 업데이트 해준다.
@@ -103,12 +125,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .remove(session);
 
         if (username != null) {
-            ChatMessage leave = new ChatMessage(
-                    ChatMessage.MessageType.LEAVE,
-                    username,
-                    username + "님이 퇴장하셨습니다.",
-                    roomId
-            );
+            ChatMessage leave = switchChatMessageType(ChatMessage.MessageType.LEAVE, username, roomId);
 
             // 방 인원 수 감소
             Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), -1L);
@@ -163,4 +180,33 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         throw new IllegalArgumentException("roomId parameter is missing in WebSocket URI");
     }
 
+    private ChatMessage switchChatMessageType(ChatMessage.MessageType type, String sender, String roomId) {
+        return switchChatMessageType(type, new ChatMessage(type, sender, "", roomId));
+    }
+
+    private ChatMessage switchChatMessageType(ChatMessage.MessageType type, ChatMessage chat) {
+        if (type == ChatMessage.MessageType.JOIN) {
+            return new ChatMessage(
+                    ChatMessage.MessageType.JOIN,
+                    chat.getSender(),
+                    chat.getSender() + "님이 입장하셨습니다.",
+                    chat.getRoomId()
+            );
+        } else if (type == ChatMessage.MessageType.LEAVE) {
+            return new ChatMessage(
+                    ChatMessage.MessageType.LEAVE,
+                    chat.getSender(),
+                    chat.getSender() + "님이 퇴장하셨습니다.",
+                    chat.getRoomId()
+            );
+        } else if (type == ChatMessage.MessageType.KICK) {
+            return new ChatMessage(
+                    ChatMessage.MessageType.KICK,
+                    chat.getSender(),
+                    chat.getSender() + "님이 " + chat.getContent() + "님을 " + "강퇴하였습니다.",
+                    chat.getRoomId()
+            );
+        }
+        return chat;
+    }
 }

@@ -2,9 +2,11 @@ package com.api.domain.room.controller;
 
 import com.api.domain.common.model.CustomSlice;
 import com.api.domain.room.model.RequestCreateRoomDTO;
+import com.api.domain.room.model.RequestKickUserDTO;
 import com.api.domain.room.model.RequestUpdateRoomDTO;
 import com.api.domain.room.model.ResponseReadRoomDTO;
 import com.api.domain.room.service.RoomService;
+import com.api.domain.user.model.RequestReadUserDTO;
 import com.api.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +14,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/room")
@@ -68,7 +72,7 @@ public class RoomController {
 
     // 방 인원 목록 조회
     @GetMapping("/list/{roomId}")
-    public ResponseEntity<?> getRoomMembers(
+    public ResponseEntity<List<RequestReadUserDTO>> getRoomMembers(
             @PathVariable Long roomId
     ) {
         return ResponseEntity.ok(roomService.getRoomUserList(roomId));

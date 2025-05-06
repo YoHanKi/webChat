@@ -26,9 +26,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RoomService {
+    private final UserRepository userRepository;
     private final RoomRepository roomRepository;
     private final RoomUserRepository roomUserRepository;
-    private final UserRepository userRepository;
     private final RedisRoomRepository redisRoomRepository;
 
     // 방 생성
@@ -270,6 +270,31 @@ public class RoomService {
         return roomUserRepository.findAllByRoomAndLeavedIsFalse(room)
                 .stream().map(RequestReadUserDTO::of)
                 .toList();
+    }
+
+    /**
+     *  방에 특정 유저를 벤합니다.
+     */
+    public void kickUser(Long roomId, String userName, String sessionId, String kickUserName) {
+        RoomEntity room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("방을 찾을 수 없습니다."));
+
+        // 방장만 유저를 벤할 수 있습니다.
+        if (!room.getCreator().getUsername().equals(sessionId)) {
+            throw new UserForbiddenException("방장만 유저를 벤할 수 있습니다.");
+        }
+
+        UserEntity user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+
+        // 해당 유저 조회
+        RoomUserEntity roomUser = roomUserRepository.findFirstByRoomAndUserAndLeavedIsFalse(room, user)
+                .orElseThrow(() -> new IllegalArgumentException("방에 유저가 없습니다."));
+
+        roomUser.nowLeave();
+
+        // 명시적으로 save 호출
+        roomUserRepository.save(roomUser);
     }
 
 }
