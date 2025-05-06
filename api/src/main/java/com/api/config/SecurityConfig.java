@@ -79,6 +79,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/login", "/api/user/register", "/api/room/read").permitAll()
                         .anyRequest().authenticated()
                 )
+                // 로그아웃 시 세션 삭제
+                .logout(logout -> logout
+                        .logoutUrl("/api/logout")
+                        .invalidateHttpSession(true)
+                )
+
                 // 직접 등록한 DaoAuthenticationProvider 사용
                 .authenticationProvider(authenticationProvider())
                 // JSON 로그인 필터를 UsernamePasswordAuthenticationFilter 위치에 삽입

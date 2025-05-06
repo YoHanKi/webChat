@@ -1,7 +1,6 @@
 package com.api.domain.chat.websocket.handler;
 
 import com.api.domain.chat.model.ChatMessage;
-import com.api.domain.chat.redis.repository.RedisRoomRepository;
 import com.api.domain.chat.redis.service.RedisPublisher;
 import com.api.domain.room.exception.RoomFullException;
 import com.api.domain.room.service.RoomService;
@@ -40,8 +39,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // 1) roomId 파싱 (쿼리 파라미터로 전달된 값)
         String roomId = getRoomIdFromHandshake(session);
 
-        // TODO : roomService 에서 roomId 인원을 추가 및 제한을 체크하는 로직 추가
-        Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), 1L);
+        // TODO: 먼저 인원이 찼는지 확인 후 업데이트 해야한다.
+        Long current = roomService.updateOnlyCurrentCapacity(Long.valueOf(roomId), 1L);
 
         if (current == -1) {
             throw new RoomFullException("방이 가득 찼습니다.");
@@ -84,6 +83,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             );
         }
 
+        // TODO : 채팅방 인원 목록에 추가 및 RoomEntity를 업데이트 해준다.
+         roomService.updateRoomUserCount(chat);
+
         redisPublisher.publish(chat);
     }
 
@@ -111,10 +113,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             // 방 인원 수 감소
             Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), -1L);
 
-            if (current == 0) {
-                // 방 삭제 로직
-                roomService.deleteRoom(Long.valueOf(roomId));
-            }
+//            if (current == 0) {
+//                // 방 삭제 로직
+//                roomService.deleteRoom(Long.valueOf(roomId));
+//            }
 
             redisPublisher.publish(leave);
         }
@@ -125,6 +127,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      * @param chat Redis에서 발행된 메시지
      */
     public void broadcast(ChatMessage chat) {
+        // 회원 목록 갱신은 JOIN/LEAVE 메시지에 대해서만 수행
+        if (chat.getType() == ChatMessage.MessageType.JOIN || chat.getType() == ChatMessage.MessageType.LEAVE) {
+            roomService.addRoomEvent(chat);
+            chat.setCurrentUserList(roomService.getRoomMembersDetailed(chat.getRoomId()));
+        }
         TextMessage packet = new TextMessage(chat.toJson());
         sessionsByRoom.getOrDefault(chat.getRoomId(), Set.of())
                 .forEach(sess -> {

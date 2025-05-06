@@ -2,6 +2,8 @@ package com.api.domain.chat.redis.repository;
 
 import com.api.domain.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
+import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -16,6 +18,7 @@ import java.util.List;
 public class RedisRoomRepository {
     private final RedisTemplate<String, ChatMessage> redisTemplate;
     private final RedisTemplate<String, String> allowanceRedisTemplate;
+    private final RedisTemplate<String, String> stringRedisTemplate;
     private final RedisScript<Long> roomAllowanceScript;
 
     /**
@@ -36,7 +39,9 @@ public class RedisRoomRepository {
         return this.getChatHistory(roomId, 0, 0);
     }
 
-    /** 1) 신규 방 생성 (Hash) */
+    /**
+     * 신규 방 생성 (Hash)
+     */
     public void addRoom(long roomId, int maxCapacity) {
         String key = "room:allowance:" + roomId;
         allowanceRedisTemplate.delete(key);  // 기존 value 키가 있으면 제거
@@ -44,7 +49,47 @@ public class RedisRoomRepository {
         allowanceRedisTemplate.opsForHash().put(key, "maxCapacity",     String.valueOf(maxCapacity));
     }
 
-    /** 2) 최대 인원 변경 */
+    /**
+     * 방에 인원 목록 갱신
+     */
+    public int switchRoomAndGetCurrentCapacity(ChatMessage message) {
+        String roomKey = "room:members:" + message.getRoomId();
+        String userId  = message.getSender();  // 혹은 userId 필드
+
+        switch (message.getType()) {
+            case JOIN:
+                // JOIN → 멤버 셋에 추가
+                stringRedisTemplate.opsForSet().add(roomKey, userId);
+                break;
+
+            case LEAVE:
+                // LEAVE → 멤버 셋에서 제거
+                stringRedisTemplate.opsForSet().remove(roomKey, userId);
+                break;
+
+            default:
+                // 그 외의 경우는 무시
+                return -1;
+        }
+
+        // 원자적 Set 연산 뒤에 바로 카드 산출
+        Long count = stringRedisTemplate.opsForSet().size(roomKey);
+        return (count != null ? count.intValue() : 0);
+    }
+
+    /**
+     * 현재 인원 변경
+     */
+    public void updateCurrentCapacity(long roomId, long currentCapacity) {
+        String key = "room:allowance:" + roomId;
+        if (allowanceRedisTemplate.hasKey(key)) {
+            allowanceRedisTemplate.opsForHash().put(key, "currentCapacity", String.valueOf(currentCapacity));
+        }
+    }
+
+    /**
+     * 최대 인원 변경
+     */
     public void updateMaxCapacity(long roomId, int maxCapacity) {
         String key = "room:allowance:" + roomId;
         if (allowanceRedisTemplate.hasKey(key)) {
@@ -52,16 +97,35 @@ public class RedisRoomRepository {
         }
     }
 
-    /** 3) 방 삭제 */
+    /**
+     * 방 삭제
+     */
     public void deleteRoom(long roomId) {
         allowanceRedisTemplate.delete("room:allowance:" + roomId);
     }
 
-    /** 4) Lua 스크립트 실행 (증가 or -1) */
+    /**
+     * Lua 스크립트 실행 (증가 or -1)
+     */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public Long increaseCurrentCapacity(long roomId, long increment) {
         String key = "room:allowance:" + roomId;
         // ARGV는 반드시 문자열로 넘깁니다.
         return allowanceRedisTemplate.execute(roomAllowanceScript, List.of(key), String.valueOf(increment));
+    }
+
+    /**
+     * 방 이벤트를 Redis Stream에 ObjectRecord로 추가합니다.
+     */
+    public void addRoomEvent(ChatMessage message) {
+        String streamKey = "room:events";
+
+        // ChatMessage 객체 자체를 레코드 값으로 직렬화해서 저장
+        ObjectRecord<String, ChatMessage> record = StreamRecords
+                .objectBacked(message)          // V 타입이 ChatMessage
+                .withStreamKey(streamKey);      // 스트림 키 지정
+
+        // RedisTemplate<String,ChatMessage>의 StreamOperations 사용
+        redisTemplate.opsForStream().add(record);
     }
 }

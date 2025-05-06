@@ -66,4 +66,12 @@ public class RoomController {
         return ResponseEntity.ok().build();
     }
 
+    // 방 인원 목록 조회
+    @GetMapping("/list/{roomId}")
+    public ResponseEntity<?> getRoomMembers(
+            @PathVariable Long roomId
+    ) {
+        return ResponseEntity.ok(roomService.getRoomUserList(roomId));
+    }
+
 }

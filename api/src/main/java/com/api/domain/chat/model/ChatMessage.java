@@ -1,5 +1,7 @@
 package com.api.domain.chat.model;
 
+import com.api.domain.user.model.RequestReadUserDTO;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -10,11 +12,12 @@ import lombok.Setter;
 import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChatMessage implements Serializable {
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -27,6 +30,17 @@ public class ChatMessage implements Serializable {
     private String sender;
     private String content;
     private String roomId;
+
+    // 특정 상황에만 리스트를 반환
+    @Setter
+    private List<RequestReadUserDTO> currentUserList;
+
+    public ChatMessage(MessageType type, String sender, String content, String roomId) {
+        this.type = type;
+        this.sender = sender;
+        this.content = content;
+        this.roomId = roomId;
+    }
 
     /**
      * 이 ChatMessage 객체를 JSON 문자열로 변환합니다.

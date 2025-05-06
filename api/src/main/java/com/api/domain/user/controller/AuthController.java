@@ -3,13 +3,12 @@ package com.api.domain.user.controller;
 import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.model.RegisterRequest;
 import com.api.domain.user.service.UserService;
+import com.api.security.model.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -31,5 +30,12 @@ public class AuthController {
                     .status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", ex.getMessage()));
         }
+    }
+
+    @GetMapping("auth")
+    public ResponseEntity<?> auth(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else return ResponseEntity.ok().build();
     }
 }
