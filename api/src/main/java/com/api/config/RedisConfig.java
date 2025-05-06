@@ -116,4 +116,25 @@ public class RedisConfig {
         // 3) 컨테이너 생성
         return StreamMessageListenerContainer.create(cf, opts);
     }
+
+    /**
+     * 순수 String 키·값 연산용 RedisTemplate.
+     * WebSocket 시그널링, 간단 Pub/Sub, Stream 중계 등에 사용합니다.
+     */
+    @Bean
+    public RedisTemplate<String, String> redisStreamingTemplate(RedisConnectionFactory cf) {
+        RedisTemplate<String, String> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+
+        StringRedisSerializer serializer = new StringRedisSerializer();
+        // 문자열 그대로 저장/조회
+        tpl.setKeySerializer(serializer);
+        tpl.setValueSerializer(serializer);
+        tpl.setHashKeySerializer(serializer);
+        tpl.setHashValueSerializer(serializer);
+
+        tpl.setEnableTransactionSupport(false);
+        tpl.afterPropertiesSet();
+        return tpl;
+    }
 }
