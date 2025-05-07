@@ -1,8 +1,8 @@
 package com.api.domain.room.controller;
 
 import com.api.domain.common.model.CustomSlice;
+import com.api.domain.room.model.ImageVO;
 import com.api.domain.room.model.RequestCreateRoomDTO;
-import com.api.domain.room.model.RequestKickUserDTO;
 import com.api.domain.room.model.RequestUpdateRoomDTO;
 import com.api.domain.room.model.ResponseReadRoomDTO;
 import com.api.domain.room.service.RoomService;
@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -76,6 +77,25 @@ public class RoomController {
             @PathVariable Long roomId
     ) {
         return ResponseEntity.ok(roomService.getRoomUserList(roomId));
+    }
+
+    /**
+     * 업데이트된 Base64 썸네일 저장
+     */
+    @PostMapping("/{roomId}/thumbnail")
+    public ResponseEntity<Void> uploadThumbnail(
+            @PathVariable Long roomId,
+            @RequestBody ImageVO imageVO) {
+
+        String dataUrl = imageVO.getImage();
+        if (dataUrl == null || !dataUrl.startsWith("data:image")) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Redis에 30초 TTL로 저장 (짧게 캐싱)
+        roomService.saveThumbnail(roomId, dataUrl, Duration.ofSeconds(30));
+
+        return ResponseEntity.ok().build();
     }
 
 }

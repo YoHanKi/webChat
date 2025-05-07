@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -133,5 +134,15 @@ public class RedisRoomRepository {
 
         // RedisTemplate<String,ChatMessage>의 StreamOperations 사용
         redisTemplate.opsForStream().add(record);
+    }
+
+    public String getThumbnail(long roomId) {
+        String key = "room:thumbnail:" + roomId;
+        return stringRedisTemplate.opsForValue().get(key);
+    }
+
+    public void saveThumbnail(Long roomId, String dataUrl, Duration duration) {
+        String key = "room:thumbnail:" + roomId;
+        stringRedisTemplate.opsForValue().set(key, dataUrl, duration);
     }
 }

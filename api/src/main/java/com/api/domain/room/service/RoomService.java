@@ -20,6 +20,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -63,8 +65,21 @@ public class RoomService {
         // 방 조회 로직
         Slice<RoomEntity> roomSlice = roomRepository.findAllByDeletedFalse(pageable);
 
+        List<ResponseReadRoomDTO> list = new ArrayList<>();
+
+        for (RoomEntity room : roomSlice) {
+            // Redis에서 현재 인원 수 가져오기
+            String thumbnail = redisRoomRepository.getThumbnail(room.getRoomId());
+
+            if (thumbnail == null) {
+                list.add(ResponseReadRoomDTO.convert(room));
+            } else {
+                list.add(ResponseReadRoomDTO.convert(room, thumbnail));
+            }
+        }
+
         return CustomSlice.<ResponseReadRoomDTO>builder()
-                .content(roomSlice.map(ResponseReadRoomDTO::convert).getContent())
+                .content(list)
                 .hasNext(roomSlice.hasNext())
                 .hasPrevious(roomSlice.hasPrevious())
                 .number(roomSlice.getNumber())
@@ -297,4 +312,7 @@ public class RoomService {
         roomUserRepository.save(roomUser);
     }
 
+    public void saveThumbnail(Long roomId, String dataUrl, Duration duration) {
+        redisRoomRepository.saveThumbnail(roomId, dataUrl, duration);
+    }
 }

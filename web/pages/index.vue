@@ -1,23 +1,56 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-gray-50">
-    <!-- Header -->
-    <header class="bg-[#03C75A] text-white p-4 flex flex-col items-center justify-center shadow-md">
-      <h1 class="text-2xl font-bold">WebChat Rooms</h1>
-    </header>
+  <div class="flex flex-col">
 
     <!-- Room list -->
-    <main ref="scrollContainer" class="flex-1 p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <main ref="scrollContainer" class="px-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
           v-for="room in rooms"
-          :key="room.roomId"
-          class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer p-6 flex flex-col"
+          :key="room.id"
+          class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer p-6 flex flex-col h-[350px] ring-2 ring-transparent hover:ring-[#03C75A] relative"
       >
-        <h2 class="text-xl font-semibold mb-2 text-gray-800">{{ room.name }}</h2>
-        <p class="text-gray-500 mb-1 text-sm">참여 인원: {{ room.currentCapacity }} / {{ room.maxCapacity }}</p>
-        <p class="text-gray-500 mb-4 flex-grow">{{ room.description }}</p>
+        <!-- 썸네일 or 플레이스홀더 -->
+        <div class="mb-4 w-full h-32 rounded overflow-hidden bg-gray-100 relative flex-shrink-0">
+          <!-- 이미지가 있으면 보여주고 -->
+          <img
+              v-if="room.thumbnail"
+              :src="room.thumbnail"
+              alt="방 썸네일"
+              class="w-full h-full object-cover"
+              @error="e => e.target.src = '/default-thumb.png'"
+          />
+          <!-- 없으면 '방송 준비중' 플레이스홀더 -->
+          <div
+              v-else
+              class="absolute inset-0 flex flex-col items-center justify-center bg-black text-white"
+          >
+            <svg
+                class="w-12 h-12 text-[#03C75A] animate-pulse mb-2"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+              <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            <p class="text-sm font-bold">방송 준비중입니다</p>
+          </div>
+        </div>
+
+        <h2 class="text-xl font-semibold mb-2 text-gray-800 line-clamp-1">{{ room.name }}</h2>
+        <p class="text-gray-500 mb-1 text-sm flex-shrink-0">
+          참여 인원: {{ room.currentCapacity }} / {{ room.maxCapacity }}
+        </p>
+        <div class="overflow-y-auto flex-grow mb-4">
+          <p class="text-gray-500 line-clamp-3">{{ room.description }}</p>
+        </div>
         <NuxtLink
             :to="`/chat/${room.id}`"
-            class="mt-auto bg-[#03C75A] text-white px-4 py-2 rounded-md text-center hover:bg-[#02af4f] transition"
+            class="flex-shrink-0 bg-[#03C75A] text-white px-4 py-2 rounded-md text-center hover:bg-[#02af4f] transition"
         >
           입장하기
         </NuxtLink>

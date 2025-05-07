@@ -20,7 +20,9 @@ function onLogout() {
 
 <template>
   <nav class="bg-white shadow px-6 py-4 flex justify-between items-center">
-    <NuxtLink to="/" class="text-2xl font-bold">WebChat</NuxtLink>
+    <NuxtLink to="/" class="text-2xl font-bold items-center text-[#03C75A]">
+      <img src="~/assets/images/logo.svg" alt="로고" class="h-8 mr-2" />
+    </NuxtLink>
     <div class="flex items-center space-x-4">
       <NuxtLink
           v-if="!auth.user"

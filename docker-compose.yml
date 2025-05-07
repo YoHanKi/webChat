@@ -27,6 +27,16 @@ services:
     depends_on:
       - api
 
+  coturn:
+    image: coturn/coturn
+    container_name: coturn
+    ports:
+      - "3478:3478"      # STUN/TURN
+      - "5349:5349/tcp"  # TURN over TLS (선택)
+    restart: unless-stopped
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
+
   redis:
     image: redis:7.0-alpine
     container_name: redis
