@@ -29,6 +29,11 @@
           >
             방송 시작하기
           </button>
+          <button
+              @click="startScreenShare"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md shadow-md transition font-bold ml-4">
+              화면 공유 시작
+          </button>
         </div>
       </div>
 
@@ -85,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { ref, onBeforeUnmount, nextTick } from 'vue';
 
 const props = defineProps({
   roomId:  { type: [String, Number], required: true },
@@ -98,6 +103,7 @@ const videoElement = ref(null);
 let pc = null;
 let signalingSocket = null;
 let localStream = null;
+let snapshotInterval;
 
 const ICE_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
@@ -172,43 +178,56 @@ async function handleSignalMessage(event) {
   }
 }
 
-// 방송 시작 (방장만)
+// 카메라 방송 시작
 async function startStream() {
+  await startCapture({ video: true, audio: true });
+}
+
+// 화면 공유 시작
+async function startScreenShare() {
+  await startCapture({ video: { cursor: "always" }, audio: false }, true);
+}
+
+// 공통 캡처 & WebRTC 초기화
+async function startCapture(constraints, isScreen = false) {
   if (!props.isOwner) return;
 
   try {
-    // 1) 로컬 캡처
-    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+    // 1) 화면 또는 카메라 캡처
+    localStream = isScreen
+        ? await navigator.mediaDevices.getDisplayMedia(constraints)
+        : await navigator.mediaDevices.getUserMedia(constraints);
 
-    // 2) 화면 영역에 <video> 요소가 렌더링되도록 flag 먼저 토글
+    // 2) 뷰 업데이트
     isLive.value = true;
-    // DOM 업데이트 후 ref가 채워지길 기다림
     await nextTick();
-
-    // 3) <video>에 스트림 연결
     videoElement.value.srcObject = localStream;
 
-    isLive.value = true;
-
-    // 2) WebRTC 초기화 및 시그널링 연결
     initWebRTC();
 
-    // 3) 로컬 트랙을 PeerConnection에 추가하고 Offer 생성
-    localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+    // 2.5) WebSocket이 OPEN 상태가 될 때까지 기다림
+    await new Promise((resolve) => {
+      if (signalingSocket.readyState === WebSocket.OPEN) {
+        return resolve();
+      }
+      signalingSocket.addEventListener('open', () => resolve(), { once: true });
+    });
+
+    // 3) WebRTC/시그널링 초기화
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
+    signalingSocket.send(JSON.stringify({
+      type: 'OFFER',
+      roomId: props.roomId,
+      sdp: offer
+    }));
 
-    // 4) Offer 전송
-    signalingSocket.send(
-        JSON.stringify({
-          type: 'OFFER',
-          roomId: props.roomId,
-          sdp: offer
-        })
-    );
-  } catch (error) {
-    console.error('방송 시작 실패:', error);
-    alert('카메라 또는 마이크 접근에 실패했습니다.');
+    // 4) 썸네일 캡처 시작
+    snapshotInterval = setInterval(captureThumbnail, 20000);
+  } catch (err) {
+    console.error('캡처 실패:', err);
+    alert(isScreen ? '화면 공유에 실패했습니다.' : '카메라 접근에 실패했습니다.');
   }
 }
 
@@ -232,11 +251,39 @@ function stopStream() {
   }
 
   isLive.value = false;
+
+  // 캡쳐 종료
+  if (snapshotInterval) {
+    clearInterval(snapshotInterval);
+    snapshotInterval = null;
+  }
+}
+
+function captureThumbnail() {
+  if (!videoElement.value || videoElement.value.readyState < 2) return;
+  const canvas = document.createElement('canvas');
+  canvas.width  = 320;
+  canvas.height = 180;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoElement.value, 0, 0, canvas.width, canvas.height);
+
+  // Base64 문자열
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+  console.log('Thumbnail captured:', dataUrl);
+
+  // POST to backend
+  fetch(`/api/room/${props.roomId}/thumbnail`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: dataUrl })
+  }).catch(console.error);
 }
 
 // 컴포넌트 언마운트 시 정리
 onBeforeUnmount(() => {
   stopStream();
+  clearInterval(snapshotInterval);
 });
 </script>
 

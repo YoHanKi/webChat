@@ -37,8 +37,8 @@ export const useAuthStore = defineStore('auth', {
                 throw new Error(data.error || '회원가입에 실패했습니다.')
             }
         },
-        validate(user) {
-            if (user !== null) {
+        async validate(username: string) {
+            if (username !== null) {
                 // null이 아니라면 검증
                 fetch('/api/user/auth', {
                     method: 'GET',
