@@ -7,9 +7,9 @@
 </template>
 <script setup>
 import AdminLayout from '~/components/admin/AdminLayout.vue'
-import AdminUsers from '~/components/admin/AdminUsers.vue'
-import AdminRooms from '~/components/admin/AdminRooms.vue'
-import AdminNotices from '~/components/admin/AdminNotices.vue'
+import AdminUsers from '~/components/admin/view/AdminUsers.vue'
+import AdminRooms from '~/components/admin/view/AdminRooms.vue'
+import AdminNotices from '~/components/admin/view/AdminNotices.vue'
 
 function tabComponent(tab) {
   if (tab === 'user') return AdminUsers
