@@ -38,12 +38,12 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   initialData: {
     type: Object,
-    default: () => ({ username: '', password: '', role: 'USER' })
+    default: () => ({ username: '', password: ''})
   }
 });
 
@@ -56,6 +56,5 @@ watch(formData, (newVal) => {
 }, { deep: true });
 
 function onSubmit() {
-  // 폼 자체 제출은 사용되지 않음 - 모달에서 처리
 }
 </script>

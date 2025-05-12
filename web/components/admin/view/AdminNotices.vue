@@ -15,7 +15,7 @@
     />
     <AdminPagination :page="page" :total="total" @change="onPageChange"/>
 
-    <!-- 모달 팝업 -->
+    <!-- 추가/수정 모달 팝업 -->
     <AdminModal
       v-model="showModal"
       :title="modalTitle"
@@ -27,6 +27,23 @@
         @update:form="updateFormData"
       />
     </AdminModal>
+    
+    <!-- 삭제 확인 모달 -->
+    <AdminModal
+      v-model="showDeleteModal"
+      title="공지사항 삭제"
+      confirm-text="삭제"
+      @confirm="confirmDelete"
+    >
+      <div class="text-center py-4">
+        <ExclamationTriangleIcon class="w-12 h-12 mx-auto text-yellow-500 mb-4" />
+        <p class="text-lg font-medium text-gray-900 mb-2">정말로 이 공지사항을 삭제하시겠습니까?</p>
+        <p class="text-sm text-gray-500">
+          "{{ noticeToDelete?.title || ''}}" 공지사항을 삭제하면 영구적으로 제거됩니다.
+          <br>이 작업은 되돌릴 수 없습니다.
+        </p>
+      </div>
+    </AdminModal>
   </div>
 </template>
 <script setup>
@@ -36,7 +53,8 @@ import AdminTable from '../AdminTable.vue'
 import AdminPagination from '../AdminPagination.vue'
 import AdminModal from '../modal/AdminModal.vue'
 import AdminNoticeForm from '../form/AdminNoticeForm.vue'
-import {PlusIcon} from "@heroicons/vue/24/outline/index.js";
+import {PlusIcon, ExclamationTriangleIcon} from "@heroicons/vue/24/outline";
+import { useAdminColumns } from '~/composables/useAdminColumns';
 
 const adminColumns = useAdminColumns();
 
@@ -48,10 +66,9 @@ const notices = ref([
 const page = ref(1)
 const total = ref(2)
 
-function onSearch(f) { /* 검색 로직 */
-}
+function onSearch(f) { /* 검색 로직 */ }
 
-// 모달 관련 상태
+// 추가/수정 모달 관련 상태
 const showModal = ref(false);
 const isEditing = ref(false);
 const formData = ref({
@@ -94,11 +111,32 @@ function saveNotice() {
   formData.value = { id: null, title: '', content: '' };
 }
 
+// 삭제 모달 관련 상태 및 함수
+const showDeleteModal = ref(false);
+const noticeToDelete = ref(null);
+
 function onDelete(row) {
-  alert('삭제: ' + row.title);
+  noticeToDelete.value = row;
+  showDeleteModal.value = true;
+}
+
+function confirmDelete() {
+  // 실제 삭제 API 호출
+  console.log('삭제 확인:', noticeToDelete.value);
+  
+  // 성공 시 데이터 다시 불러오기
+  // 여기서는 간단하게 배열에서 제거하는 것으로 대체
+  if (noticeToDelete.value) {
+    const index = notices.value.findIndex(item => item.id === noticeToDelete.value.id);
+    if (index !== -1) {
+      notices.value.splice(index, 1);
+    }
+  }
+  
+  noticeToDelete.value = null;
 }
 
 function onPageChange(p) {
-  page.value = p
+  page.value = p;
 }
 </script>
