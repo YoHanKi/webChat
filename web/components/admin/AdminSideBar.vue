@@ -3,7 +3,7 @@
     <div class="p-5 font-semibold text-xl tracking-wide flex items-center gap-3 border-b border-gray-200 text-gray-700">
       <!-- Heroicon: AdjustmentsHorizontalIcon -->
       <AdjustmentsHorizontalIcon class="w-6 h-6 text-gray-500"/>
-      Admin Panel
+      <span>관리자 대시보드</span>
     </div>
     <nav class="flex-1 mt-4">
       <ul>
@@ -22,12 +22,17 @@
           <ChatBubbleLeftRightIcon class="w-5 h-5 mr-3 flex-shrink-0"/>
           채팅방 관리
         </li>
+        <li :class="tabClass('chat')" @click="$emit('changeTab', 'chat')">
+          <!-- Heroicon: ChatBubbleBottomCenterTextIcon -->
+          <ChatBubbleBottomCenterTextIcon class="w-5 h-5 mr-3 flex-shrink-0"/>
+          채팅 관리
+        </li>
       </ul>
     </nav>
   </aside>
 </template>
 <script setup>
-import { BellIcon, UserGroupIcon, ChatBubbleLeftRightIcon, AdjustmentsHorizontalIcon } from '@heroicons/vue/24/outline'
+import { BellIcon, UserGroupIcon, ChatBubbleLeftRightIcon, AdjustmentsHorizontalIcon, ChatBubbleBottomCenterTextIcon } from '@heroicons/vue/24/outline'
 const props = defineProps({activeTab: String})
 
 function tabClass(tab) {

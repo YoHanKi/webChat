@@ -5,6 +5,7 @@
     </template>
   </AdminLayout>
 </template>
+
 <script setup>
 import AdminLayout from '~/components/admin/AdminLayout.vue'
 import AdminUsers from '~/components/admin/view/AdminUsers.vue'
