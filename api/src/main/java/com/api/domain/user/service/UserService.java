@@ -3,8 +3,13 @@ package com.api.domain.user.service;
 import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.entity.UserEntity;
 import com.api.domain.user.model.RegisterRequest;
+import com.api.domain.user.model.SearchUserRequest;
+import com.api.domain.user.model.SelectUserForAdminDTO;
 import com.api.domain.user.repository.UserRepository;
+import com.api.domain.user.repository.jooq.UserDSLRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserDSLRepository userDSLRepository;
 
     public void register(RegisterRequest request) {
         userRepository.findByUsername(request.getUsername())
@@ -25,5 +31,9 @@ public class UserService {
                         .password(passwordEncoder.encode(request.getPassword()))
                         .role(UserEntity.Role.USER)
                 .build());
+    }
+
+    public Page<SelectUserForAdminDTO> findAllBySearchCondition(SearchUserRequest search, Pageable pageable) {
+        return userDSLRepository.findAllBySearchCondition(search, pageable);
     }
 }
