@@ -13,6 +13,6 @@ public class DefaultExceptionHandler
 
     @Override
     protected ApiError createError(Exception e) {
-        return new ApiError(500, "Internal server error");
+        return new ApiError(500, "알 수 없는 오류가 발생했습니다.");
     }
 }
