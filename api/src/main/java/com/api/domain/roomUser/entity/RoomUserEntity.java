@@ -1,6 +1,6 @@
 package com.api.domain.roomUser.entity;
 
-import com.api.domain.common.entity.BaseDateEntity;
+import com.api.common.entity.BaseDateEntity;
 import com.api.domain.room.entity.RoomEntity;
 import com.api.domain.user.entity.UserEntity;
 import jakarta.persistence.*;

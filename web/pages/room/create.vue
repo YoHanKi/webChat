@@ -94,7 +94,7 @@ const createRoom = async () => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || '채팅방 생성에 실패했습니다.');
+      new Error(errorData.message || '채팅방 생성에 실패했습니다.');
     }
 
     const createdRoom = await response.json();

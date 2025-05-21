@@ -10,9 +10,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
 
 @RestControllerAdvice
-@RequiredArgsConstructor
 public class GlobalExceptionAdvice {
     private final List<ExceptionHandlerStrategy> handlers;
+
+    public GlobalExceptionAdvice(List<ExceptionHandlerStrategy> handlers) {
+        this.handlers = handlers;
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAll(Exception e) {

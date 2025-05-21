@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 @Component
 public class ValidationExceptionHandler extends AbstractExceptionHandler<MethodArgumentNotValidException> {
 
-    public ValidationExceptionHandler(Class<MethodArgumentNotValidException> exceptionType) {
-        super(exceptionType);
+    public ValidationExceptionHandler() {
+        super(MethodArgumentNotValidException.class);
     }
 
     @Override

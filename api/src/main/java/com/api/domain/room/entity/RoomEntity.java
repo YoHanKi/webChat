@@ -1,6 +1,6 @@
 package com.api.domain.room.entity;
 
-import com.api.domain.common.entity.BaseDateEntity;
+import com.api.common.entity.BaseDateEntity;
 import com.api.domain.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

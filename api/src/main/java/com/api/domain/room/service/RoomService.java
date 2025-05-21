@@ -2,9 +2,9 @@ package com.api.domain.room.service;
 
 import com.api.domain.chat.model.ChatMessage;
 import com.api.domain.chat.redis.repository.RedisRoomRepository;
-import com.api.domain.common.exception.UserForbiddenException;
-import com.api.domain.common.model.CustomSlice;
-import com.api.domain.common.utils.RoleUtil;
+import com.api.common.exception.UserForbiddenException;
+import com.api.common.model.CustomSlice;
+import com.api.common.utils.RoleUtil;
 import com.api.domain.room.entity.RoomEntity;
 import com.api.domain.room.model.RequestCreateRoomDTO;
 import com.api.domain.room.model.ResponseReadRoomDTO;
