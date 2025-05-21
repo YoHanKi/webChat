@@ -2,6 +2,7 @@ package com.api.domain.user.service;
 
 import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.entity.UserEntity;
+import com.api.domain.user.model.ModifyUserRequest;
 import com.api.domain.user.model.RegisterRequest;
 import com.api.domain.user.model.SearchUserRequest;
 import com.api.domain.user.model.SelectUserForAdminDTO;
@@ -20,6 +21,9 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserDSLRepository userDSLRepository;
 
+    /**
+     * 사용자 등록
+     */
     public void register(RegisterRequest request) {
         userRepository.findByUsername(request.getUsername())
             .ifPresent(u -> {
@@ -33,7 +37,33 @@ public class UserService {
                 .build());
     }
 
+    /**
+     * 사용자 정보 조회
+     */
     public Page<SelectUserForAdminDTO> findAllBySearchCondition(SearchUserRequest search, Pageable pageable) {
         return userDSLRepository.findAllBySearchCondition(search, pageable);
+    }
+
+    /**
+     * 사용자 정보 수정
+     */
+    public void modifyUser(ModifyUserRequest request) {
+        userRepository.findById(request.id())
+                .ifPresentOrElse(user -> {
+                    user.update(request.username(), request.role());
+                    userRepository.save(user);
+                }, () -> {
+                    throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+                });
+    }
+
+    /**
+     * 사용자 삭제
+     */
+    public void deleteUser(Long id) {
+        userRepository.findById(id)
+                .ifPresentOrElse(userRepository::delete, () -> {
+                    throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+                });
     }
 }

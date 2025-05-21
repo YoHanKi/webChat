@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Optional;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -33,5 +35,14 @@ public class UserEntity extends BaseDateEntity {
         USER,
         MANAGER,
         ADMIN
+    }
+
+    public void update(String username, String role) {
+        Role roleEnum = Optional.ofNullable(role)
+                .map(Role::valueOf)
+                .orElse(this.role);
+
+        this.username = Optional.ofNullable(username).orElse(this.username);
+        this.role = roleEnum;
     }
 }
