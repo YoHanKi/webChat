@@ -1,4 +1,4 @@
-package com.api.domain.thumbnail.controller;
+package com.api.web.domain.thumbnail.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;

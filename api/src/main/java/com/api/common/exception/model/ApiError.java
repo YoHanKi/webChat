@@ -1,4 +1,4 @@
-package com.api.domain.common.exception.model;
+package com.api.common.exception.model;
 
 import lombok.Getter;
 import lombok.Setter;

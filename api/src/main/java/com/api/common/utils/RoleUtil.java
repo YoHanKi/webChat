@@ -1,4 +1,4 @@
-package com.api.domain.common.utils;
+package com.api.common.utils;
 
 import com.api.domain.user.entity.UserEntity;
 

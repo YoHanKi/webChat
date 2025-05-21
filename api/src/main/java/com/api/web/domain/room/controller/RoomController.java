@@ -1,6 +1,6 @@
-package com.api.domain.room.controller;
+package com.api.web.domain.room.controller;
 
-import com.api.domain.common.model.CustomSlice;
+import com.api.common.model.CustomSlice;
 import com.api.domain.room.model.ImageVO;
 import com.api.domain.room.model.RequestCreateRoomDTO;
 import com.api.domain.room.model.RequestUpdateRoomDTO;

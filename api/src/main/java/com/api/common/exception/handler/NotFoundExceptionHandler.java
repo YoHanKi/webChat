@@ -1,6 +1,6 @@
-package com.api.domain.common.exception.handler;
+package com.api.common.exception.handler;
 
-import com.api.domain.common.exception.model.ApiError;
+import com.api.common.exception.model.ApiError;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Component;
 

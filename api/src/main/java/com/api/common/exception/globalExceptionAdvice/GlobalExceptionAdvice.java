@@ -1,7 +1,7 @@
-package com.api.domain.common.exception.globalExceptionAdvice;
+package com.api.common.exception.globalExceptionAdvice;
 
-import com.api.domain.common.exception.handler.ExceptionHandlerStrategy;
-import com.api.domain.common.exception.model.ApiError;
+import com.api.common.exception.handler.ExceptionHandlerStrategy;
+import com.api.common.exception.model.ApiError;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

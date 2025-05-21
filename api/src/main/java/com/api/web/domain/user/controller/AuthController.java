@@ -1,4 +1,4 @@
-package com.api.domain.user.controller;
+package com.api.web.domain.user.controller;
 
 import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.model.RegisterRequest;

@@ -1,4 +1,4 @@
-package com.api.domain.common.model;
+package com.api.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
