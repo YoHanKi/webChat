@@ -38,4 +38,11 @@ public class NoticeEntity extends BaseDateEntity {
         this.isMainNotice = false;
         this.isDeleted = false;
     }
+
+    public void update(String title, String content, String author, boolean mainNotice) {
+        this.title = title;
+        this.content = content;
+        this.author = author;
+        this.isMainNotice = mainNotice;
+    }
 }
