@@ -41,6 +41,12 @@ public class RoomEntity extends BaseDateEntity {
         this.maxCapacity = maxCapacity != null ? maxCapacity : this.maxCapacity;
     }
 
+    public void update(String roomName, String roomDescription, boolean isDeleted) {
+        this.roomName = roomName != null ? roomName : this.roomName;
+        this.roomDescription = roomDescription != null ? roomDescription : this.roomDescription;
+        this.deleted = isDeleted;
+    }
+
     public void updateCurrentCapacity(int currentCapacity) {
         this.currentCapacity = currentCapacity;
     }

@@ -28,4 +28,8 @@ public class HistoryMessageEntity extends BaseDateEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    public void update(String content, String sender) {
+        this.content = content;
+        this.sender = sender;
+    }
 }
