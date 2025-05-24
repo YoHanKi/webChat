@@ -57,32 +57,22 @@ class NoticeDSLRepositoryTest {
             Pageable pageable = invocation.getArgument(1);
             
             // 검색 조건에 따라 필터링된 결과 반환
-            List<SelectNoticeForAdminDTO> filteredList;
-            
-            switch (request.searchNoticeType()) {
-                case TITLE:
-                    filteredList = noticeList.stream()
-                            .filter(notice -> notice.getTitle().contains(request.searchText()))
-                            .toList();
-                    break;
-                case CONTENT:
-                    filteredList = noticeList.stream()
-                            .filter(notice -> notice.getContent().contains(request.searchText()))
-                            .toList();
-                    break;
-                case AUTHOR:
-                    filteredList = noticeList.stream()
-                            .filter(notice -> notice.getAuthor().contains(request.searchText()))
-                            .toList();
-                    break;
-                case DATE:
+            List<SelectNoticeForAdminDTO> filteredList = switch (request.searchType()) {
+                case TITLE -> noticeList.stream()
+                        .filter(notice -> notice.getTitle().contains(request.searchText()))
+                        .toList();
+                case CONTENT -> noticeList.stream()
+                        .filter(notice -> notice.getContent().contains(request.searchText()))
+                        .toList();
+                case AUTHOR -> noticeList.stream()
+                        .filter(notice -> notice.getAuthor().contains(request.searchText()))
+                        .toList();
+                case DATE ->
                     // 실제로는 날짜 비교 로직이 더 복잡하겠지만 테스트 목적으로는 단순화
-                    filteredList = noticeList;
-                    break;
-                default:
-                    filteredList = noticeList;
-            }
-            
+                        noticeList;
+                default -> noticeList;
+            };
+
             int start = (int) pageable.getOffset();
             int end = Math.min((start + pageable.getPageSize()), filteredList.size());
             

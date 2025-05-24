@@ -15,7 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/notice")
+@RequestMapping("/admin/notice")
 @RequiredArgsConstructor
 public class NoticeAdminController {
     private final NoticeService noticeService;

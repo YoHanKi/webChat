@@ -15,9 +15,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/room")
+@RequestMapping("/admin/room")
 @RequiredArgsConstructor
-public class RoomController {
+public class RoomAdminController {
     private final RoomAdminService roomAdminService;
 
     @GetMapping("/search")

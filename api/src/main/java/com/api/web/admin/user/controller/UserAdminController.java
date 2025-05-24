@@ -15,7 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/admin/user")
+@RequestMapping("/admin/user")
 @RequiredArgsConstructor
 public class UserAdminController {
     private final UserService userService;

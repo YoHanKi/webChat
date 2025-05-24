@@ -2,9 +2,9 @@ package com.api.domain.user.model;
 
 import com.api.domain.user.model.enums.SearchUserType;
 
-public record SearchUserRequest(SearchUserType searchSearchUserType, String searchText) {
+public record SearchUserRequest(SearchUserType searchType, String searchText) {
     public SearchUserRequest {
-        if (searchSearchUserType == null) searchSearchUserType = SearchUserType.ALL;
+        if (searchType == null) searchType = SearchUserType.ALL;
         if (searchText == null) searchText = "";
     }
 

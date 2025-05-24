@@ -61,7 +61,7 @@ class UserDSLRepositoryTest {
             // 검색 조건에 따라 필터링된 결과 반환
             List<SelectUserForAdminDTO> filteredList;
 
-            switch (request.searchSearchUserType()) {
+            switch (request.searchType()) {
                 case USERNAME:
                     filteredList = userList.stream()
                             .filter(user -> user.username().contains(request.searchText()))

@@ -58,27 +58,21 @@ class RoomDSLRepositoryTest {
             // 검색 조건에 따라 필터링된 결과 반환
             List<SelectRoomForAdminDTO> filteredList;
             
-            if (request.searchRoomType() == null) {
+            if (request.searchType() == null) {
                 filteredList = roomList;
             } else {
-                switch (request.searchRoomType()) {
-                    case NAME:
-                        filteredList = roomList.stream()
-                                .filter(room -> room.roomName().contains(request.searchText()))
-                                .toList();
-                        break;
-                    case DESCRIPTION:
-                        filteredList = roomList.stream()
-                                .filter(room -> room.roomId().contains(request.searchText()))
-                                .toList();
-                        break;
-                    case DATE:
+                filteredList = switch (request.searchType()) {
+                    case NAME -> roomList.stream()
+                            .filter(room -> room.roomDescriptions().contains(request.searchText()))
+                            .toList();
+                    case DESCRIPTION -> roomList.stream()
+                            .filter(room -> room.roomName().contains(request.searchText()))
+                            .toList();
+                    case DATE ->
                         // 실제로는 날짜 비교 로직이 더 복잡할 수 있지만 테스트 목적으로는 단순화
-                        filteredList = roomList;
-                        break;
-                    default:
-                        filteredList = roomList;
-                }
+                            roomList;
+                    default -> roomList;
+                };
             }
             
             int start = (int) pageable.getOffset();
@@ -107,8 +101,8 @@ class RoomDSLRepositoryTest {
         assertNotNull(result);
         assertEquals(2, result.getTotalElements());
         assertEquals(2, result.getContent().size());
-        assertEquals("일반 채팅방", result.getContent().get(0).roomName());
-        assertEquals("비밀 채팅방", result.getContent().get(1).roomName());
+        assertEquals("일반 채팅방", result.getContent().getFirst().roomDescriptions());
+        assertEquals("비밀 채팅방", result.getContent().get(1).roomDescriptions());
     }
     
     @Test
@@ -123,7 +117,7 @@ class RoomDSLRepositoryTest {
         // Then
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals("일반 채팅방", result.getContent().get(0).roomName());
+        assertEquals("일반 채팅방", result.getContent().getFirst().roomDescriptions());
     }
     
     @Test
@@ -138,7 +132,7 @@ class RoomDSLRepositoryTest {
         // Then
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        assertEquals("room2", result.getContent().get(0).roomId());
+        assertEquals("room2", result.getContent().getFirst().roomName());
     }
     
     @Test
@@ -186,6 +180,6 @@ class RoomDSLRepositoryTest {
         assertEquals(2, result.getTotalElements());
         assertEquals(1, result.getContent().size());
         assertEquals(1, result.getNumber()); // 페이지 번호 확인
-        assertEquals("비밀 채팅방", result.getContent().get(0).roomName()); // 두 번째 항목 확인
+        assertEquals("비밀 채팅방", result.getContent().getFirst().roomDescriptions()); // 두 번째 항목 확인
     }
 }

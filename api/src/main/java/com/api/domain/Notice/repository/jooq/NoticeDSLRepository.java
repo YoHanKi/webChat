@@ -23,7 +23,7 @@ public class NoticeDSLRepository {
 
     public Page<SelectNoticeForAdminDTO> findAllBySearchCondition(SearchNoticeRequest search, Pageable pageable) {
         // 검색 조건 설정
-        Condition condition = switch (search.searchNoticeType()) {
+        Condition condition = switch (search.searchType()) {
             case TITLE -> NOTICES.TITLE.likeIgnoreCase("%" + search.searchText() + "%");
             case CONTENT -> NOTICES.CONTENT.likeIgnoreCase("%" + search.searchText() + "%");
             case AUTHOR -> NOTICES.AUTHOR.likeIgnoreCase("%" + search.searchText() + "%");

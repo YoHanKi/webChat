@@ -1,14 +1,14 @@
 package com.api.domain.room.model;
 
 public record SearchRoomRequest(
-        SearchRoomType searchRoomType,
+        SearchRoomType searchType,
         String searchText,
         String startDate,
         String endDate
 ) {
 
     public SearchRoomRequest {
-        if (searchRoomType == null) searchRoomType = SearchRoomType.ALL;
+        if (searchType == null) searchType = SearchRoomType.ALL;
         if (searchText == null) searchText = "";
     }
 

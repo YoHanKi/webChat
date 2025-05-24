@@ -60,32 +60,24 @@ class HistoryMessageDSLRepositoryTest {
             // 검색 조건에 따라 필터링된 결과 반환
             List<SelectHistoryMessageForAdminDTO> filteredList;
             
-            if (request.searchHistoryMessageType() == null) {
+            if (request.searchType() == null) {
                 filteredList = messageList;
             } else {
-                switch (request.searchHistoryMessageType()) {
-                    case ROOM_ID:
-                        filteredList = messageList.stream()
-                                .filter(message -> message.roomId().contains(request.searchText()))
-                                .toList();
-                        break;
-                    case SENDER:
-                        filteredList = messageList.stream()
-                                .filter(message -> message.sender().contains(request.searchText()))
-                                .toList();
-                        break;
-                    case CONTENT:
-                        filteredList = messageList.stream()
-                                .filter(message -> message.content().contains(request.searchText()))
-                                .toList();
-                        break;
-                    case DATE:
+                filteredList = switch (request.searchType()) {
+                    case ROOM_ID -> messageList.stream()
+                            .filter(message -> message.roomId().contains(request.searchText()))
+                            .toList();
+                    case SENDER -> messageList.stream()
+                            .filter(message -> message.sender().contains(request.searchText()))
+                            .toList();
+                    case CONTENT -> messageList.stream()
+                            .filter(message -> message.content().contains(request.searchText()))
+                            .toList();
+                    case DATE ->
                         // 실제로는 날짜 비교 로직이 더 복잡할 수 있지만 테스트 목적으로는 단순화
-                        filteredList = messageList;
-                        break;
-                    default:
-                        filteredList = messageList;
-                }
+                            messageList;
+                    default -> messageList;
+                };
             }
             
             int start = (int) pageable.getOffset();

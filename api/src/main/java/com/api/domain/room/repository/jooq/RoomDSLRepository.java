@@ -23,7 +23,7 @@ public class RoomDSLRepository {
 
     public Page<SelectRoomForAdminDTO> findAllBySearchCondition(SearchRoomRequest search, Pageable pageable) {
         // 검색 조건 설정
-        Condition condition = switch (search.searchRoomType()) {
+        Condition condition = switch (search.searchType()) {
             case NAME -> ROOM.ROOM_ID.likeIgnoreCase("%" + search.searchText() + "%");
             case DESCRIPTION -> ROOM.ROOM_NAME.likeIgnoreCase("%" + search.searchText() + "%");
             case DATE -> ROOM.CREATE_DATE.between(
@@ -46,7 +46,7 @@ public class RoomDSLRepository {
 
         // 페이징 적용하여 데이터 조회
         List<SelectRoomForAdminDTO> result = dslContext
-                .select(ROOM.ROOM_ID, ROOM.ROOM_NAME, ROOM.ROOM_DESCRIPTION, ROOM.DELETED, ROOM.CREATE_DATE)
+                .select(ROOM.ROOM_ID, ROOM.ROOM_NAME, ROOM.ROOM_DESCRIPTION, ROOM.users().USERNAME, ROOM.DELETED, ROOM.CREATE_DATE)
                 .from(ROOM)
                 .where(condition)
                 .orderBy(ROOM.CREATE_DATE.desc())

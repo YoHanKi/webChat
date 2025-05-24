@@ -1,6 +1,5 @@
 package com.api.domain.user.repository.jooq;
 
-import com.api.domain.user.entity.UserEntity;
 import com.api.domain.user.model.SearchUserRequest;
 import com.api.domain.user.model.SelectUserForAdminDTO;
 import lombok.RequiredArgsConstructor;
@@ -26,23 +25,18 @@ public class UserDSLRepository {
        // 검색 조건 설정
        Condition condition;
 
-       switch (search.searchSearchUserType()) {
-           case USERNAME:
-               condition = USERS.USERNAME.likeIgnoreCase("%" + search.searchText() + "%");
-               break;
-           case ID:
+       switch (search.searchType()) {
+           case USERNAME -> condition = USERS.USERNAME.likeIgnoreCase("%" + search.searchText() + "%");
+           case ID -> {
                try {
                    Long id = Long.parseLong(search.searchText());
                    condition = USERS.ID.eq(id);
                } catch (NumberFormatException e) {
                    condition = DSL.falseCondition(); // ID가 숫자 형식이 아닌 경우
                }
-               break;
-           case ROLE:
-               condition = USERS.ROLE.likeIgnoreCase("%" + search.searchText() + "%");
-               break;
-           default:
-               condition = DSL.trueCondition();
+           }
+           case ROLE -> condition = USERS.ROLE.likeIgnoreCase("%" + search.searchText() + "%");
+           default -> condition = DSL.trueCondition();
        }
 
        // 총 레코드 수 조회

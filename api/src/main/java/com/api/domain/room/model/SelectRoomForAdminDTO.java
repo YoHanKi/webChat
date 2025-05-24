@@ -5,16 +5,16 @@ import com.api.domain.room.entity.RoomEntity;
 
 public record SelectRoomForAdminDTO(
         Long id,
-        String roomId,
         String roomName,
-        String roomType,
+        String roomDescriptions,
+        String creator,
         boolean isDeleted,
         String createdAt
 ) {
     public SelectRoomForAdminDTO {
-        if (roomId == null) roomId = "";
         if (roomName == null) roomName = "";
-        if (roomType == null) roomType = "";
+        if (roomDescriptions == null) roomDescriptions = "";
+        if (creator == null) creator = "";
         if (createdAt == null) createdAt = "";
     }
 

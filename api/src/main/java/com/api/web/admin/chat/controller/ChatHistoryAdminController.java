@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/admin/chat/history")
 @RequiredArgsConstructor
-public class ChatHistoryController {
+public class ChatHistoryAdminController {
     private final ChatHistoryService chatHistoryService;
 
     // 채팅 히스토리 페이지 조회

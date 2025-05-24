@@ -22,7 +22,7 @@ public class HistoryMessageDSLRepository {
     private final DSLContext dslContext;
 
     public Page<SelectHistoryMessageForAdminDTO> findAllBySearchCondition(SearchHistoryMessageRequest search, Pageable pageable) {
-        Condition condition = switch (search.searchHistoryMessageType()) {
+        Condition condition = switch (search.searchType()) {
             case ROOM_ID -> HISTORY_MESSAGE.ROOM_ID.likeIgnoreCase("%" + search.searchText() + "%");
             case SENDER -> HISTORY_MESSAGE.SENDER.likeIgnoreCase("%" + search.searchText() + "%");
             case CONTENT -> HISTORY_MESSAGE.CONTENT.likeIgnoreCase("%" + search.searchText() + "%");

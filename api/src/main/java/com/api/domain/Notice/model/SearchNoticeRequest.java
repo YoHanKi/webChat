@@ -3,13 +3,13 @@ package com.api.domain.Notice.model;
 import com.api.domain.Notice.model.enums.SearchNoticeType;
 
 public record SearchNoticeRequest(
-        SearchNoticeType searchNoticeType,
+        SearchNoticeType searchType,
         String searchText,
         String startDate,
         String endDate
 ) {
     public SearchNoticeRequest {
-        if (searchNoticeType == null) searchNoticeType = SearchNoticeType.ALL;
+        if (searchType == null) searchType = SearchNoticeType.ALL;
         if (searchText == null) searchText = "";
     }
 
