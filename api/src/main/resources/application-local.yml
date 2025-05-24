@@ -7,7 +7,7 @@ spring:
       port: 16379
 
   datasource:
-    url: jdbc:mysql://localhost:13306/webChat?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:13306/webChat?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=CONVERT_TO_NULL
     username: user
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver

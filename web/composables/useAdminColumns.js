@@ -19,7 +19,7 @@ export const useAdminColumns = () => {
 
         room: [
             {key: 'id', label: 'ID'},
-            {key: 'name', label: '방 이름'},
+            {key: 'roomName', label: '방 이름'},
             {key: 'creator', label: '방장'},
             {key: 'createdAt', label: '생성일'},
             {key: 'actions', label: '관리'}
