@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.5'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'nu.studer.jooq' version '9.0'
 }
 
 group = 'com'
@@ -9,7 +10,7 @@ version = '0.1.0-SNAPSHOT'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -40,6 +41,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
+	// JOOQ
+	implementation 'org.springframework.boot:spring-boot-starter-jooq'
+	jooqGenerator 'com.mysql:mysql-connector-j'
+
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
@@ -54,4 +59,38 @@ tasks.register('dockerBuild', Exec) {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+
+jooq {
+	version = '3.19.22'
+
+	configurations {
+		main {
+			generateSchemaSourceOnCompilation = true
+			generationTool {
+				logging = org.jooq.meta.jaxb.Logging.WARN
+				jdbc {
+					driver = 'com.mysql.cj.jdbc.Driver'
+					url = 'jdbc:mysql://localhost:13306/webChat?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true'
+					user = 'user'
+					password = '1234'
+				}
+				generator {
+					name = 'org.jooq.codegen.JavaGenerator'
+					database {
+						name = 'org.jooq.meta.mysql.MySQLDatabase'
+						includes = '.*'
+						excludes = 'flyway_schema_history | .*\\$'
+						inputSchema = 'webChat'
+					}
+					target {
+						packageName = 'com.api.jooq'
+						directory = 'build/generated-src/jooq/main'
+					}
+					strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+				}
+			}
+		}
+	}
 }

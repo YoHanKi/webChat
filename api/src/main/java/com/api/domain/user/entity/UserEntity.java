@@ -1,7 +1,13 @@
 package com.api.domain.user.entity;
 
+import com.api.common.entity.BaseDateEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.Optional;
 
 @Entity
 @Table(name = "users")
@@ -9,7 +15,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserEntity {
+public class UserEntity extends BaseDateEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,5 +35,15 @@ public class UserEntity {
         USER,
         MANAGER,
         ADMIN
+    }
+
+    public void update(String username, String password, String role) {
+        Role roleEnum = Optional.ofNullable(role)
+                .map(Role::valueOf)
+                .orElse(this.role);
+
+        this.username = Optional.ofNullable(username).orElse(this.username);
+        this.password = Optional.ofNullable(password).orElse(this.password);
+        this.role = roleEnum;
     }
 }

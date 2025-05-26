@@ -11,6 +11,7 @@
     "start": "nuxt start"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "@nuxt/eslint": "^1.3.0",
     "@nuxt/fonts": "^0.11.2",
     "@nuxt/icon": "^1.12.0",

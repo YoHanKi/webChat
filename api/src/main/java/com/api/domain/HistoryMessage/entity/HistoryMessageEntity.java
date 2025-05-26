@@ -1,6 +1,6 @@
 package com.api.domain.HistoryMessage.entity;
 
-import com.api.domain.common.entity.BaseDateEntity;
+import com.api.common.entity.BaseDateEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,4 +28,8 @@ public class HistoryMessageEntity extends BaseDateEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    public void update(String content, String sender) {
+        this.content = content;
+        this.sender = sender;
+    }
 }

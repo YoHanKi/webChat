@@ -1,6 +1,6 @@
 package com.api.domain.room.entity;
 
-import com.api.domain.common.entity.BaseDateEntity;
+import com.api.common.entity.BaseDateEntity;
 import com.api.domain.user.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -39,6 +39,12 @@ public class RoomEntity extends BaseDateEntity {
         this.roomName = roomName != null ? roomName : this.roomName;
         this.roomDescription = roomDescription != null ? roomDescription : this.roomDescription;
         this.maxCapacity = maxCapacity != null ? maxCapacity : this.maxCapacity;
+    }
+
+    public void update(String roomName, String roomDescription, boolean isDeleted) {
+        this.roomName = roomName != null ? roomName : this.roomName;
+        this.roomDescription = roomDescription != null ? roomDescription : this.roomDescription;
+        this.deleted = isDeleted;
     }
 
     public void updateCurrentCapacity(int currentCapacity) {

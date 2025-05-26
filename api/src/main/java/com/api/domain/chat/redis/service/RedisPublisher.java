@@ -1,6 +1,6 @@
 package com.api.domain.chat.redis.service;
 
-import com.api.domain.HistoryMessage.service.ChatHistoryPersistenceService;
+import com.api.domain.HistoryMessage.service.ChatHistoryService;
 import com.api.domain.chat.model.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ListOperations;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class RedisPublisher {
     private final ChannelTopic topic;
     private final RedisTemplate<String, ChatMessage> redisTemplate;
-    private final ChatHistoryPersistenceService persistenceService;
+    private final ChatHistoryService persistenceService;
 
     // Redis에 채팅방별 몇개의 데이터를 저장할지 여부
     private static final int MAX_HISTORY_SIZE = 100;
@@ -32,6 +32,6 @@ public class RedisPublisher {
         ops.trim(historyKey, 0, MAX_HISTORY_SIZE - 1);
 
         // 3) 비동기 MySQL 영속화
-        persistenceService.persist(message);
+        persistenceService.asyncPersistChatHistory(message);
     }
 }
