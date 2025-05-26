@@ -11,7 +11,7 @@
       />
     </div>
 
-    <div v-if="!initialData.id">
+    <div>
       <label for="password" class="block text-sm font-medium text-gray-700">비밀번호</label>
       <input
           id="password"
@@ -31,6 +31,7 @@
           required
       >
         <option value="USER">일반 사용자</option>
+        <option value="MANAGER">매니저</option>
         <option value="ADMIN">관리자</option>
       </select>
     </div>

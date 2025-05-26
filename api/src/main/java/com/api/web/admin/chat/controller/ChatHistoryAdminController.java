@@ -56,7 +56,7 @@ public class ChatHistoryAdminController {
     // 채팅 히스토리 수정
     @PutMapping
     public ResponseEntity<Void> updateChatHistory(
-            ModifyHistoryMessageRequest request,
+            @RequestBody ModifyHistoryMessageRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         // 관리자 확인

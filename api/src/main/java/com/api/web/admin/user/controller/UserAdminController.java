@@ -1,6 +1,7 @@
 package com.api.web.admin.user.controller;
 
 import com.api.domain.user.entity.UserEntity;
+import com.api.domain.user.model.CreateUserRequest;
 import com.api.domain.user.model.ModifyUserRequest;
 import com.api.domain.user.model.SearchUserRequest;
 import com.api.domain.user.model.SelectUserForAdminDTO;
@@ -36,9 +37,25 @@ public class UserAdminController {
         return ResponseEntity.ok(searchResult);
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<Void> createUser(
+            @RequestBody CreateUserRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        // 관리자 확인
+        if (userDetails == null || !userDetails.getUserEntity().getRole().equals(UserEntity.Role.ADMIN)) {
+            return ResponseEntity.status(403).build(); // Forbidden
+        }
+
+        // 사용자 생성 로직 구현
+        userService.createUser(request);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/modify")
-    public ResponseEntity modifyUser(ModifyUserRequest request,
-                                     @AuthenticationPrincipal CustomUserDetails userDetails
+    public ResponseEntity<Void> modifyUser(
+            @RequestBody ModifyUserRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         // 관리자 확인
         if (userDetails == null || !userDetails.getUserEntity().getRole().equals(UserEntity.Role.ADMIN)) {
@@ -52,7 +69,7 @@ public class UserAdminController {
     }
 
     @DeleteMapping
-    public ResponseEntity deleteUser(
+    public ResponseEntity<Void> deleteUser(
             @RequestParam Long id,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {

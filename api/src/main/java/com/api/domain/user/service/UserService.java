@@ -2,10 +2,7 @@ package com.api.domain.user.service;
 
 import com.api.domain.user.exception.UsernameAlreadyExistsException;
 import com.api.domain.user.entity.UserEntity;
-import com.api.domain.user.model.ModifyUserRequest;
-import com.api.domain.user.model.RegisterRequest;
-import com.api.domain.user.model.SearchUserRequest;
-import com.api.domain.user.model.SelectUserForAdminDTO;
+import com.api.domain.user.model.*;
 import com.api.domain.user.repository.UserRepository;
 import com.api.domain.user.repository.jooq.UserDSLRepository;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +47,7 @@ public class UserService {
     public void modifyUser(ModifyUserRequest request) {
         userRepository.findById(request.id())
                 .ifPresentOrElse(user -> {
-                    user.update(request.username(), request.role());
+                    user.update(request.username(), passwordEncoder.encode(request.password()), request.role());
                     userRepository.save(user);
                 }, () -> {
                     throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
@@ -65,5 +62,13 @@ public class UserService {
                 .ifPresentOrElse(userRepository::delete, () -> {
                     throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
                 });
+    }
+
+    public void createUser(CreateUserRequest request) {
+         userRepository.save(UserEntity.builder()
+                .username(request.username())
+                .password(passwordEncoder.encode(request.password()))
+                .role(request.role())
+                .build());
     }
 }

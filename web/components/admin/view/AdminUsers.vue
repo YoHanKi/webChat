@@ -155,20 +155,27 @@ function updateFormData(data) {
 
 async function saveUser() {
   if (!isEditing.value) {
-    alert('현재 백엔드 API는 사용자 추가 기능을 지원하지 않습니다. 사용자 수정만 가능합니다.');
-    // ChatHistoryController에는 POST 메서드가 없으므로, 사용자 추가 API가 백엔드에 구현되어야 함.
-    // 만약 POST /api/admin/user/create 와 같은 API가 있다면 아래 로직 사용.
-    /*
     try {
+      if (!formData.value.username || !formData.value.password) {
+        alert('사용자 이름과 비밀번호는 필수입니다.');
+        return;
+      }
+
+      if (formData.value.role !== 'USER' && formData.value.role !== 'ADMIN' && formData.value.role !== 'MANAGER') {
+        alert('역할은 USER, MANAGER 또는 ADMIN이어야 합니다.');
+        return;
+      }
+
       const addPayload = {
         username: formData.value.username,
         password: formData.value.password,
         role: formData.value.role,
       };
-      const { error } = await useFetch(`${API_BASE_URL}/api/admin/user/create`, { // 가상의 생성 API 엔드포인트
+      const { error } = await useFetch(`${API_BASE_URL}/admin/user/create`, { // 가상의 생성 API 엔드포인트
         method: 'POST',
         body: addPayload,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
       if (error.value) {
         console.error('사용자 추가 실패:', error.value);
@@ -182,8 +189,7 @@ async function saveUser() {
       console.error('사용자 추가 중 예외 발생:', e);
       alert('사용자 추가 중 오류가 발생했습니다.');
     }
-    */
-    return; // 추가 기능 없으므로 여기서 중단
+    return;
   }
 
   // 사용자 수정 로직 (POST /api/admin/user/modify)
@@ -192,11 +198,7 @@ async function saveUser() {
     return;
   }
   if (!formData.value.password && isEditing.value) {
-    // ModifyUserRequest는 password를 필수로 요구합니다.
-    // 실제 운영 환경에서는 사용자에게 비밀번호를 입력하도록 유도하거나,
-    // 백엔드 API가 비밀번호 없는 수정을 허용하도록 변경해야 합니다.
     alert('사용자 수정 시 비밀번호는 필수입니다. (현재 API 제약사항)');
-    // return; // 또는 비밀번호 입력 필드를 활성화하도록 UI 변경 고려
   }
 
   try {
@@ -207,10 +209,11 @@ async function saveUser() {
       role: formData.value.role,
     };
 
-    const { error } = await useFetch(`${API_BASE_URL}/api/admin/user/modify`, { // UserAdminController의 modifyUser는 POST 메서드 사용
+    const { error } = await useFetch(`${API_BASE_URL}/admin/user/modify`, { // UserAdminController의 modifyUser는 POST 메서드 사용
       method: 'POST',
       body: payload,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
     });
 
     if (error.value) {
@@ -247,8 +250,10 @@ async function confirmDelete() {
 
   try {
     // UserAdminController의 deleteUser는 id를 @RequestParam으로 받음
-    const { error } = await useFetch(`${API_BASE_URL}/api/admin/user?id=${userToDelete.value.id}`, {
+    const { error } = await useFetch(`${API_BASE_URL}/admin/user?id=${userToDelete.value.id}`, {
       method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
     });
 
     if (error.value) {

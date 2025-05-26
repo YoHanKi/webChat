@@ -168,7 +168,8 @@ async function saveChat() {
       response = await useFetch(`${API_BASE_URL}/admin/chat/history`, {
         method: 'PUT',
         body: payload,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
     } else {
       // 추가 로직 (POST /admin/chat/history - 가정)
@@ -180,7 +181,8 @@ async function saveChat() {
       response = await useFetch(`${API_BASE_URL}/admin/chat/history`, {
         method: 'POST',
         body: addPayload,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
     }
 
@@ -216,6 +218,7 @@ async function confirmDelete() {
   try {
     const { error } = await useFetch(`${API_BASE_URL}/admin/chat/history/${chatToDelete.value.id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
 
     if (error.value) {

@@ -169,7 +169,8 @@ async function saveNotice() {
     const { error } = await useFetch(`${API_BASE_URL}/api/admin/notice`, {
       method: 'PUT',
       body: payload,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
     });
 
     if (error.value) {
@@ -205,6 +206,7 @@ async function confirmDelete() {
   try {
     const { error } = await useFetch(`${API_BASE_URL}/api/admin/notice/${noticeToDelete.value.id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
 
     if (error.value) {

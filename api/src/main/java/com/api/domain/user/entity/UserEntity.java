@@ -37,12 +37,13 @@ public class UserEntity extends BaseDateEntity {
         ADMIN
     }
 
-    public void update(String username, String role) {
+    public void update(String username, String password, String role) {
         Role roleEnum = Optional.ofNullable(role)
                 .map(Role::valueOf)
                 .orElse(this.role);
 
         this.username = Optional.ofNullable(username).orElse(this.username);
+        this.password = Optional.ofNullable(password).orElse(this.password);
         this.role = roleEnum;
     }
 }

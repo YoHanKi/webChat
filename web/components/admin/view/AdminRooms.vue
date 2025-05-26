@@ -165,10 +165,11 @@ async function saveRoom() {
     };
 
     // RoomController는 PUT /api/admin/room 만 제공 (id 유무로 생성/수정 구분 가정)
-    const { error } = await useFetch(`${API_BASE_URL}/api/admin/room`, {
+    const { error } = await useFetch(`${API_BASE_URL}/admin/room`, {
       method: 'PUT',
       body: payload,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
     });
 
     if (error.value) {
@@ -208,8 +209,9 @@ async function confirmDelete() {
   console.warn('백엔드에 채팅방 삭제 API (DELETE /api/admin/room/{id}) 구현이 필요합니다.');
 
   try {
-    const { error } = await useFetch(`${API_BASE_URL}/api/admin/room/${roomToDelete.value.id}`, {
+    const { error } = await useFetch(`${API_BASE_URL}/admin/room/${roomToDelete.value.id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
 
     if (error.value) {
