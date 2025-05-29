@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <AdminSearchBar :filters="filters" @search="onSearch"/>
+    <AdminSearchBar :filters="filters" :options="userSearchOptions" @search="onSearch"/>
     <div class="flex justify-end">
       <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md shadow-sm text-sm font-medium transition-colors" @click="onAdd">
         <PlusIcon class="w-5 h-5 mr-2 inline-block"/>
@@ -67,6 +67,14 @@ const page = ref(1)
 const total = ref(0)
 const itemsPerPage = 10; // 페이지 당 항목 수
 
+// SearchUserType에 맞는 검색 옵션 정의
+const userSearchOptions = [
+  { value: 'ALL', label: '전체' },
+  { value: 'USERNAME', label: '아이디' },
+  { value: 'ID', label: '회원번호' },
+  { value: 'ROLE', label: '권한' }
+]
+
 // 사용자 목록 가져오기 함수
 async function fetchUsers() {
   try {
@@ -125,8 +133,8 @@ const modalTitle = computed(() => {
 });
 
 function onSearch(newFilters) {
+  filters.value.type = newFilters.type || 'ALL';
   filters.value.keyword = newFilters.keyword || '';
-  // filters.type, filters.date는 현재 User API 검색 조건에 사용되지 않음
   page.value = 1; // 검색 시 첫 페이지로 이동
   fetchUsers();
 }
