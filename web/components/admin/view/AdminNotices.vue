@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <AdminSearchBar :filters="filters" @search="onSearch"/>
+    <AdminSearchBar :filters="filters" :options="noticeSearchOptions" @search="onSearch"/>
     <div class="flex justify-end">
       <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md shadow-sm text-sm font-medium transition-colors" @click="onAdd">
         <PlusIcon class="w-5 h-5 mr-2 inline-block"/>
@@ -61,9 +61,18 @@ const adminColumns = useAdminColumns();
 const config = useRuntimeConfig();
 const API_BASE_URL = config.public.apiURL;
 
+// SearchNoticeType에 맞는 검색 옵션 정의
+const noticeSearchOptions = [
+  { value: 'ALL', label: '전체' },
+  { value: 'TITLE', label: '제목' },
+  { value: 'CONTENT', label: '내용' },
+  { value: 'AUTHOR', label: '작성자' },
+  { value: 'DATE', label: '날짜' }
+]
+
 // SearchNoticeRequest에는 title, content가 있으나, AdminSearchBar는 keyword 하나로 받음.
 // 여기서는 keyword를 title 검색에 사용하고, date는 SearchNoticeRequest에 없으므로 사용 안함.
-const filters = ref({title: '', content: '', keyword: ''}) // keyword를 사용하고, fetchNotices에서 title로 매핑
+const filters = ref({type: 'ALL', keyword: ''})
 const notices = ref([])
 const page = ref(1)
 const total = ref(0)
@@ -75,10 +84,8 @@ async function fetchNotices() {
     const params = new URLSearchParams();
     params.append('page', page.value - 1);
     params.append('size', itemsPerPage);
-    if (filters.value.keyword) params.append('searchType', filters.value.title); // keyword를 title로 검색
-    else params.append('searchType', 'ALL'); // keyword가 없으면 빈 문자열로 처리
-    if (filters.value.content) params.append('searchText', filters.value.content); // content 검색 추가 (필요시)
-    else params.append('searchText', ''); // content가 없으면 빈 문자열로 처리
+    params.append('searchType', filters.value.type || 'ALL');
+    params.append('searchText', filters.value.keyword || '');
 
     const { data, error } = await useFetch(`${API_BASE_URL}/admin/notice/search?${params.toString()}`, {
       method: 'GET',
@@ -111,8 +118,7 @@ async function fetchNotices() {
 onMounted(fetchNotices);
 
 function onSearch(newFilters) {
-  // AdminSearchBar는 type, date, keyword를 포함한 객체를 전달
-  // 여기서는 keyword만 사용
+  filters.value.type = newFilters.type || 'ALL';
   filters.value.keyword = newFilters.keyword || '';
   page.value = 1; // 검색 시 첫 페이지로 이동
   fetchNotices();

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <AdminSearchBar :filters="filters" @search="onSearch"/>
+    <AdminSearchBar :filters="filters" :options="chatSearchOptions" @search="onSearch"/>
     <div class="flex justify-end">
       <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md shadow-sm text-sm font-medium transition-colors" @click="onAdd">
         <PlusIcon class="w-5 h-5 mr-2 inline-block"/>
@@ -62,7 +62,16 @@ const adminColumns = useAdminColumns();
 const config = useRuntimeConfig();
 const API_BASE_URL = config.public.apiURL;
 
-const filters = ref({roomId: '', sender: '', date: '', keyword: ''})
+// SearchHistoryMessageType에 맞는 검색 옵션 정의
+const chatSearchOptions = [
+  { value: 'ALL', label: '전체' },
+  { value: 'SENDER', label: '발신자' },
+  { value: 'CONTENT', label: '내용' },
+  { value: 'DATE', label: '날짜' },
+  { value: 'ROOM_ID', label: '방 ID' }
+]
+
+const filters = ref({type: 'ALL', keyword: ''})
 const chats = ref([])
 const page = ref(1)
 const total = ref(0)
@@ -74,8 +83,8 @@ async function fetchChats() {
     const params = new URLSearchParams();
     params.append('page', page.value - 1);
     params.append('size', itemsPerPage);
-    if (filters.value.roomId) params.append('roomId', filters.value.roomId);
-    if (filters.value.sender) params.append('sender', filters.value.sender);
+    params.append('searchType', filters.value.type || 'ALL');
+    params.append('searchText', filters.value.keyword || '');
 
     const { data, error } = await useFetch(`${API_BASE_URL}/admin/chat/history/search?${params.toString()}`, {
       method: 'GET',
@@ -109,7 +118,8 @@ async function fetchChats() {
 onMounted(fetchChats);
 
 function onSearch(newFilters) {
-  filters.value = { ...newFilters };
+  filters.value.type = newFilters.type || 'ALL';
+  filters.value.keyword = newFilters.keyword || '';
   page.value = 1; // 검색 시 첫 페이지로 이동
   fetchChats();
 }

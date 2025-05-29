@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <AdminSearchBar :filters="filters" @search="onSearch"/>
+    <AdminSearchBar :filters="filters" :options="roomSearchOptions" @search="onSearch"/>
     <div class="flex justify-end">
       <button class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-md shadow-sm text-sm font-medium transition-colors" @click="onAdd">
         <PlusIcon class="w-5 h-5 mr-2 inline-block"/>
@@ -61,8 +61,16 @@ const adminColumns = useAdminColumns();
 const config = useRuntimeConfig();
 const API_BASE_URL = config.public.apiURL;
 
+// SearchRoomType에 맞는 검색 옵션 정의
+const roomSearchOptions = [
+  { value: 'ALL', label: '전체' },
+  { value: 'NAME', label: '방 이름' },
+  { value: 'DESCRIPTION', label: '설명' },
+  { value: 'DATE', label: '생성일' }
+]
+
 // SearchRoomRequest DTO에 따라 필터 조정 필요. keyword를 name으로 매핑 가정.
-const filters = ref({type: '', date: '', keyword: ''})
+const filters = ref({type: 'ALL', keyword: ''})
 const rooms = ref([])
 const page = ref(1)
 const total = ref(0)
@@ -74,10 +82,8 @@ async function fetchRooms() {
     const params = new URLSearchParams();
     params.append('page', page.value - 1);
     params.append('size', itemsPerPage);
-    if (filters.value.type) params.append('searchType', filters.value.type); // keyword를 title로 검색
-    else params.append('searchType', 'ALL'); // keyword가 없으면 빈 문자열로 처리
-    if (filters.value.keyword) params.append('searchText', filters.value.keyword); // content 검색 추가 (필요시)
-    else params.append('searchText', ''); // content가 없으면 빈 문자열로 처리
+    params.append('searchType', filters.value.type || 'ALL');
+    params.append('searchText', filters.value.keyword || '');
 
     const { data, error } = await useFetch(`${API_BASE_URL}/admin/room/search?${params.toString()}`, {
       method: 'GET',
@@ -111,6 +117,7 @@ async function fetchRooms() {
 onMounted(fetchRooms);
 
 function onSearch(newFilters) {
+  filters.value.type = newFilters.type || 'ALL';
   filters.value.keyword = newFilters.keyword || '';
   page.value = 1; // 검색 시 첫 페이지로 이동
   fetchRooms();
