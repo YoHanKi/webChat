@@ -5,6 +5,9 @@ spring:
     redis:
       host: ${SPRING_REDIS_HOST}
       port: ${SPRING_REDIS_PORT}
+  threads:
+    virtual:
+      enabled: true
 
   datasource:
     url: jdbc:mysql://localhost:3306/webChat?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=CONVERT_TO_NULL
@@ -24,6 +27,8 @@ spring:
       hibernate:
         #        format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+  jooq:
+    sql-dialect: mysql
 
 server:
   port: 8080

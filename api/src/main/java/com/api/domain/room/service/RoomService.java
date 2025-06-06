@@ -26,7 +26,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RoomService {
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;

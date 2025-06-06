@@ -5,6 +5,9 @@ spring:
     redis:
       host: localhost
       port: 16379
+  threads:
+    virtual:
+      enabled: true
 
   datasource:
     url: jdbc:mysql://localhost:13306/webChat?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&zeroDateTimeBehavior=CONVERT_TO_NULL
