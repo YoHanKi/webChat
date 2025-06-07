@@ -4,8 +4,7 @@ import com.api.common.exception.model.ApiError;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DefaultExceptionHandler
-        extends AbstractExceptionHandler<Exception> {
+public class DefaultExceptionHandler extends AbstractExceptionHandler<Exception> {
 
     public DefaultExceptionHandler() {
         super(Exception.class);

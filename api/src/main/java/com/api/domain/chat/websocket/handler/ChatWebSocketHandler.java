@@ -1,5 +1,6 @@
 package com.api.domain.chat.websocket.handler;
 
+import com.api.common.utils.SocketSessionUtil;
 import com.api.domain.chat.model.ChatMessage;
 import com.api.domain.chat.redis.service.RedisPublisher;
 import com.api.domain.room.exception.RoomFullException;
@@ -14,9 +15,6 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +37,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
         // 1) roomId 파싱 (쿼리 파라미터로 전달된 값)
-        String roomId = getRoomIdFromHandshake(session);
+        String roomId = SocketSessionUtil.getRoomIdFromHandshake(session);
 
         // TODO: 먼저 인원이 찼는지 확인 후 업데이트 해야한다.
         Long current = roomService.updateOnlyCurrentCapacity(Long.valueOf(roomId), 1L);
@@ -68,7 +66,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      * @param message 수신한 메시지
      */
     @Override
-    protected void handleTextMessage(@NonNull WebSocketSession session, TextMessage message) throws IOException {
+    protected void handleTextMessage(
+            @NonNull WebSocketSession session,
+            final TextMessage message
+    ) {
         ChatMessage chat = ChatMessage.fromJson(message.getPayload());
 
         if (chat.getType() == ChatMessage.MessageType.JOIN) {
@@ -77,7 +78,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.getAttributes().put("roomId", chat.getRoomId());
 
             // 2) 입장 메시지를 모든 클라이언트에 알림
-            chat = switchChatMessageType(ChatMessage.MessageType.JOIN, chat.getSender(), chat.getRoomId());;
+            chat = switchChatMessageType(ChatMessage.MessageType.JOIN, chat.getSender(), chat.getRoomId());
         } else if (chat.getType() == ChatMessage.MessageType.KICK) {
             // 1) 강퇴 메시지 처리
             chat = switchChatMessageType(ChatMessage.MessageType.KICK, chat);
@@ -160,24 +161,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                         }
                     }
                 });
-    }
-
-    /**
-     * WebSocketSession의 URI 쿼리 파라미터에서 roomId 값을 꺼내 리턴.
-     */
-    private String getRoomIdFromHandshake(WebSocketSession session) {
-        URI uri = session.getUri();
-        if (uri == null || uri.getQuery() == null) {
-            throw new IllegalArgumentException("WebSocket URI or query string is null");
-        }
-        String[] params = uri.getQuery().split("&");
-        for (String param : params) {
-            String[] kv = param.split("=", 2);
-            if (kv.length == 2 && "roomId".equals(kv[0])) {
-                return URLDecoder.decode(kv[1], StandardCharsets.UTF_8);
-            }
-        }
-        throw new IllegalArgumentException("roomId parameter is missing in WebSocket URI");
     }
 
     private ChatMessage switchChatMessageType(ChatMessage.MessageType type, String sender, String roomId) {

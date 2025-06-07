@@ -1,5 +1,6 @@
-package com.api.common.exception.handler;
+package com.api.common.exception.handler.implement;
 
+import com.api.common.exception.handler.AbstractExceptionHandler;
 import com.api.common.exception.model.ApiError;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Component;
@@ -12,7 +13,7 @@ public class NotFoundExceptionHandler extends AbstractExceptionHandler<EntityNot
     }
 
     @Override
-    protected ApiError createError(EntityNotFoundException e) {
+    protected ApiError createError(Exception e) {
         return new ApiError(404, e.getMessage());
     }
 }
