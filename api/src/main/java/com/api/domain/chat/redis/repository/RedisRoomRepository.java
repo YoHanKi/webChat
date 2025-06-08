@@ -85,6 +85,14 @@ public class RedisRoomRepository {
     }
 
     /**
+     * 현재 roomId에서 userId가 존재하는지 확인
+     */
+    public Boolean isUserInRoom(Long roomId, Long userId) {
+        String roomKey = "room:members:" + roomId;
+        return stringRedisTemplate.opsForSet().isMember(roomKey, String.valueOf(userId));
+    }
+
+    /**
      * 현재 인원 변경
      */
     public void updateCurrentCapacity(long roomId, long currentCapacity) {

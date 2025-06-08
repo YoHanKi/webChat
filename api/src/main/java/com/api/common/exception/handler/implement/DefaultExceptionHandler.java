@@ -1,5 +1,6 @@
-package com.api.common.exception.handler;
+package com.api.common.exception.handler.implement;
 
+import com.api.common.exception.handler.AbstractExceptionHandler;
 import com.api.common.exception.model.ApiError;
 import org.springframework.stereotype.Component;
 

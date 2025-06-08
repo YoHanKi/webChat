@@ -12,11 +12,11 @@ public abstract class AbstractExceptionHandler<T extends Exception> implements E
 
     private final List<Class<? extends Exception>> exceptionTypes;
 
-    public AbstractExceptionHandler(Class<T> exceptionType) {
+    protected AbstractExceptionHandler(Class<T> exceptionType) {
         this.exceptionTypes = List.of(exceptionType);
     }
 
-    public AbstractExceptionHandler(List<Class<? extends Exception>> exceptionTypes) {
+    protected AbstractExceptionHandler(List<Class<? extends Exception>> exceptionTypes) {
         this.exceptionTypes = exceptionTypes;
     }
 

@@ -71,4 +71,9 @@ public class UserService {
                 .role(request.role())
                 .build());
     }
+
+    public UserEntity getUserByName(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+    }
 }

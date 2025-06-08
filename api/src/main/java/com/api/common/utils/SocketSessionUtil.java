@@ -1,12 +1,15 @@
 package com.api.common.utils;
 
+import com.api.domain.chat.websocket.exception.NotContainUserDetailException;
 import com.api.domain.chat.websocket.exception.SocketRoomIDException;
 import com.api.domain.chat.websocket.exception.SocketURIException;
+import com.api.security.model.CustomUserDetails;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 
 public class SocketSessionUtil {
 
@@ -26,5 +29,13 @@ public class SocketSessionUtil {
             }
         }
         throw new SocketRoomIDException("roomId parameter is missing in WebSocket URI");
+    }
+
+    public static CustomUserDetails getUserDetailsFromSession(WebSocketSession session) {
+        Principal principal = session.getPrincipal();
+        if (principal instanceof CustomUserDetails userDetails) {
+            return userDetails;
+        }
+        throw new NotContainUserDetailException("WebSocket session does not contain valid user details.");
     }
 }

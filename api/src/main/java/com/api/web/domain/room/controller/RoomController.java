@@ -1,10 +1,12 @@
 package com.api.web.domain.room.controller;
 
 import com.api.common.model.CustomSlice;
+import com.api.domain.chat.facade.ChatFacade;
 import com.api.domain.room.model.ImageVO;
 import com.api.domain.room.model.RequestCreateRoomDTO;
 import com.api.domain.room.model.RequestUpdateRoomDTO;
 import com.api.domain.room.model.ResponseReadRoomDTO;
+import com.api.domain.room.service.RoomHybridSyncService;
 import com.api.domain.room.service.RoomService;
 import com.api.domain.user.model.RequestReadUserDTO;
 import com.api.security.model.CustomUserDetails;
@@ -22,7 +24,9 @@ import java.util.List;
 @RequestMapping("/api/room")
 @RequiredArgsConstructor
 public class RoomController {
+    private final ChatFacade chatFacade;
     private final RoomService roomService;
+    private final RoomHybridSyncService roomHybridSyncService;
 
     // 방 생성
     @PostMapping("/create")
@@ -30,7 +34,7 @@ public class RoomController {
             @RequestBody RequestCreateRoomDTO requestDTO,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long roomId = roomService.createRoom(requestDTO, userDetails.getUserEntity());
+        Long roomId = roomHybridSyncService.createRoom(requestDTO, userDetails.getUserEntity());
         return ResponseEntity.ok().body(roomId);
     }
 
@@ -39,7 +43,7 @@ public class RoomController {
     public ResponseEntity<CustomSlice<ResponseReadRoomDTO>> readRoom(
             @PageableDefault(size = 6, page = 0, sort = "createDate") Pageable pageable
     ) {
-        return ResponseEntity.ok(roomService.readRoomSlice(pageable));
+        return ResponseEntity.ok(roomHybridSyncService.readRoomSlice(pageable));
     }
 
     @GetMapping("/read/{roomId}")
@@ -76,7 +80,7 @@ public class RoomController {
     public ResponseEntity<List<RequestReadUserDTO>> getRoomMembers(
             @PathVariable Long roomId
     ) {
-        return ResponseEntity.ok(roomService.getRoomUserList(roomId));
+        return ResponseEntity.ok(chatFacade.getRoomUserList(roomId));
     }
 
     /**
@@ -93,7 +97,7 @@ public class RoomController {
         }
 
         // Redis에 30초 TTL로 저장 (짧게 캐싱)
-        roomService.saveThumbnail(roomId, dataUrl, Duration.ofSeconds(30));
+        roomHybridSyncService.saveThumbnail(roomId, dataUrl, Duration.ofSeconds(30));
 
         return ResponseEntity.ok().build();
     }

@@ -1,10 +1,11 @@
 package com.api.domain.chat.websocket.handler;
 
 import com.api.common.utils.SocketSessionUtil;
+import com.api.domain.chat.facade.ChatFacade;
 import com.api.domain.chat.model.ChatMessage;
 import com.api.domain.chat.redis.service.RedisPublisher;
 import com.api.domain.room.exception.RoomFullException;
-import com.api.domain.room.service.RoomService;
+import com.api.security.model.CustomUserDetails;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
-    private final RoomService roomService;
+    private final ChatFacade chatFacade;
     private final RedisPublisher redisPublisher;
     private final Map<String, Set<WebSocketSession>> sessionsByRoom = new ConcurrentHashMap<>();
 
@@ -36,11 +37,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionEstablished(@NonNull WebSocketSession session) throws Exception {
-        // 1) roomId 파싱 (쿼리 파라미터로 전달된 값)
+        // roomId 파싱 (쿼리 파라미터로 전달된 값)
         String roomId = SocketSessionUtil.getRoomIdFromHandshake(session);
 
-        // TODO: 먼저 인원이 찼는지 확인 후 업데이트 해야한다.
-        Long current = roomService.updateOnlyCurrentCapacity(Long.valueOf(roomId), 1L);
+        CustomUserDetails userDetails = SocketSessionUtil.getUserDetailsFromSession(session);
+
+        // TODO : 회원이 해당 방에 접속해 있는지 확인하고, 만약 있다면 예외 반환
+        Long current = chatFacade.updateOnlyCurrentCapacity(Long.valueOf(roomId), 1L);
 
         if (current == -1) {
             throw new RoomFullException("방이 가득 찼습니다.");
@@ -50,7 +53,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .add(session);
 
         // 2) Redis에서 히스토리 조회
-        List<ChatMessage> history = roomService.getAllChatHistory(roomId);
+        List<ChatMessage> history = chatFacade.getAllChatHistory(roomId);
 
         if (history != null && !history.isEmpty()) {
             Collections.reverse(history);
@@ -84,7 +87,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             chat = switchChatMessageType(ChatMessage.MessageType.KICK, chat);
 
             // DB 조회하며, 방장인지 확인
-            roomService.kickUser(
+            chatFacade.kickUser(
                     Long.valueOf(chat.getRoomId()),
                     chat.getSender(),
                     session.getAttributes().get("username").toString(),
@@ -107,7 +110,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
 
         // TODO : 채팅방 인원 목록에 추가 및 RoomEntity를 업데이트 해준다.
-         roomService.updateRoomUserCount(chat);
+         chatFacade.updateRoomUserCount(chat);
 
         redisPublisher.publish(chat);
     }
@@ -129,7 +132,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             ChatMessage leave = switchChatMessageType(ChatMessage.MessageType.LEAVE, username, roomId);
 
             // 방 인원 수 감소
-            Long current = roomService.updateRoomCurrentCapacity(Long.valueOf(roomId), -1L);
+            Long current = chatFacade.updateRoomCurrentCapacity(Long.valueOf(roomId), -1L);
 
 //            if (current == 0) {
 //                // 방 삭제 로직
@@ -147,8 +150,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     public void broadcast(ChatMessage chat) {
         // 회원 목록 갱신은 JOIN/LEAVE 메시지에 대해서만 수행
         if (chat.getType() == ChatMessage.MessageType.JOIN || chat.getType() == ChatMessage.MessageType.LEAVE) {
-            roomService.addRoomEvent(chat);
-            chat.setCurrentUserList(roomService.getRoomMembersDetailed(chat.getRoomId()));
+            chatFacade.addRoomEvent(chat);
+            chat.setCurrentUserList(chatFacade.getRoomMembersDetailed(chat.getRoomId()));
         }
         TextMessage packet = new TextMessage(chat.toJson());
         sessionsByRoom.getOrDefault(chat.getRoomId(), Set.of())

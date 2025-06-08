@@ -1,5 +1,6 @@
 package com.api.domain.chat.redis.service;
 
+import com.api.domain.chat.facade.ChatFacade;
 import com.api.domain.chat.model.ChatMessage;
 import com.api.domain.room.service.RoomService;
 import jakarta.annotation.PostConstruct;
@@ -21,8 +22,8 @@ public class RoomUpdateScheduler {
     private static final String STREAM_KEY = "room:events";
     private static final String GROUP      = "room-events-group";
 
+    private final ChatFacade chatFacade;
     private final RedisTemplate<String, ChatMessage> redisTemplate;
-    private final RoomService roomService;
     private final String consumerName = UUID.randomUUID().toString();
 
     /**
@@ -74,8 +75,7 @@ public class RoomUpdateScheduler {
                     log.debug("Processing message: {}", message);
 
                     // 방 인원 수 관련 서버 반영
-                    boolean updated = roomService.updateRoomUser(message);
-
+                    boolean updated = chatFacade.updateRoomUser(message);
 
                     if (!updated && message.getType() != ChatMessage.MessageType.CHAT) {
                         log.warn("Failed to update room user count for message: {}", message);
